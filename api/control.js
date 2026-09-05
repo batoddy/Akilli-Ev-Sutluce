@@ -16,32 +16,56 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "Topic ve state alanlari zorunludur." });
   }
 
-  // 2. Gizli Çevre Değişkenleri ile HiveMQ Bağlantısı (TLS 8883)
-  const brokerUrl = `mqtts://${process.env.MQTT_HOST}:8883`;
-  
-  const client = mqtt.connect(brokerUrl, {
-    username: process.env.MQTT_USER,
-    password: process.env.MQTT_PASSWORD,
-    connectTimeout: 4000
-  });
+  // 2. Broker URL ve İstemci Yapılandırması
+  const cleanHost = (process.env.MQTT_HOST || "").replace(/^mqtts?:\/\//, "").replace(/:8883$/, "");
+  const brokerUrl = `mqtts://${cleanHost}:8883`;
 
   return new Promise((resolve) => {
+    let resolved = false;
+
+    // Güvenlik zaman aşımı: 6 saniyede bağlantı tamamlanmazsa fonksiyonu zorla kapat
+    const timer = setTimeout(() => {
+      if (!resolved) {
+        resolved = true;
+        if (client) client.end(true);
+        res.status(504).json({ error: "HiveMQ baglanti zaman asimi (Timeout)!" });
+        resolve();
+      }
+    }, 6000);
+
+    const client = mqtt.connect(brokerUrl, {
+      username: process.env.MQTT_USER,
+      password: process.env.MQTT_PASSWORD,
+      clientId: `vercel_${Math.random().toString(16).substring(2, 8)}`,
+      connectTimeout: 5000,
+      rejectUnauthorized: false // Sunucu sertifika doğrulama takılmalarını önler
+    });
+
     client.on("connect", () => {
       client.publish(topic, String(state), { qos: 0 }, (err) => {
-        client.end(true);
-        if (err) {
-          res.status(500).json({ error: "Mesaj gonderilemedi." });
-        } else {
-          res.status(200).json({ success: true, message: "Komut iletildi." });
+        if (!resolved) {
+          resolved = true;
+          clearTimeout(timer);
+          client.end(true);
+
+          if (err) {
+            res.status(500).json({ error: "Mesaj gonderilemedi: " + err.message });
+          } else {
+            res.status(200).json({ success: true, message: "Komut iletildi." });
+          }
+          resolve();
         }
-        resolve();
       });
     });
 
     client.on("error", (err) => {
-      client.end(true);
-      res.status(500).json({ error: "Broker baglanti hatasi." });
-      resolve();
+      if (!resolved) {
+        resolved = true;
+        clearTimeout(timer);
+        client.end(true);
+        res.status(500).json({ error: "Broker baglanti hatasi: " + err.message });
+        resolve();
+      }
     });
   });
 }
