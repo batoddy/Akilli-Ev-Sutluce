@@ -16,51 +16,60 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "Topic ve state alanlari zorunludur." });
   }
 
-  // 2. Broker URL ve İstemci Yapılandırması
-  const cleanHost = (process.env.MQTT_HOST || "").replace(/^mqtts?:\/\//, "").replace(/:8883$/, "");
+  // 2. Host Temizleme (protokol veya port kalıntılarını ayıklar)
+  const cleanHost = (process.env.MQTT_HOST || "")
+    .replace(/^mqtts?:\/\//, "")
+    .replace(/^wss?:\/\//, "")
+    .replace(/:[0-9]+$/, "")
+    .trim();
+
   const brokerUrl = `mqtts://${cleanHost}:8883`;
 
   return new Promise((resolve) => {
-    let resolved = false;
+    let isHandled = false;
 
-    // Güvenlik zaman aşımı: 6 saniyede bağlantı tamamlanmazsa fonksiyonu zorla kapat
+    // 7 saniyelik güvenlik zaman aşımı
     const timer = setTimeout(() => {
-      if (!resolved) {
-        resolved = true;
+      if (!isHandled) {
+        isHandled = true;
         if (client) client.end(true);
-        res.status(504).json({ error: "HiveMQ baglanti zaman asimi (Timeout)!" });
+        res.status(504).json({ error: "HiveMQ zaman asimi (Timeout)!" });
         resolve();
       }
-    }, 6000);
+    }, 7000);
 
     const client = mqtt.connect(brokerUrl, {
       username: process.env.MQTT_USER,
       password: process.env.MQTT_PASSWORD,
-      clientId: `vercel_${Math.random().toString(16).substring(2, 8)}`,
+      clientId: `vercel_sender_${Date.now()}_${Math.random().toString(16).substring(2, 6)}`,
       connectTimeout: 5000,
-      rejectUnauthorized: false // Sunucu sertifika doğrulama takılmalarını önler
+      clean: true,
+      rejectUnauthorized: false
     });
 
     client.on("connect", () => {
-      client.publish(topic, String(state), { qos: 0 }, (err) => {
-        if (!resolved) {
-          resolved = true;
+      // QoS 1: Broker'dan onay paketi (PUBACK) gelmeden bağlantıyı kesmez
+      client.publish(topic, String(state), { qos: 1 }, (err) => {
+        if (!isHandled) {
+          isHandled = true;
           clearTimeout(timer);
-          client.end(true);
 
-          if (err) {
-            res.status(500).json({ error: "Mesaj gonderilemedi: " + err.message });
-          } else {
-            res.status(200).json({ success: true, message: "Komut iletildi." });
-          }
-          resolve();
+          // Soketi zorla değil, tampon boşalınca nazikçe kapatıyoruz
+          client.end(false, () => {
+            if (err) {
+              res.status(500).json({ error: "Yayinlama hatasi: " + err.message });
+            } else {
+              res.status(200).json({ success: true, message: "Komut HiveMQ'ya teslim edildi." });
+            }
+            resolve();
+          });
         }
       });
     });
 
     client.on("error", (err) => {
-      if (!resolved) {
-        resolved = true;
+      if (!isHandled) {
+        isHandled = true;
         clearTimeout(timer);
         client.end(true);
         res.status(500).json({ error: "Broker baglanti hatasi: " + err.message });
