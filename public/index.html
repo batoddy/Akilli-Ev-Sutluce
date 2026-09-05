@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evim Kontrol Paneli</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background-color: #0f172a; color: #f8fafc; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        .card { background: #1e293b; width: 100%; max-width: 360px; border-radius: 20px; padding: 28px; box-shadow: 0 20px 40px rgba(0,0,0,0.4); border: 1px solid #334155; }
+        h1 { font-size: 1.3rem; margin-bottom: 20px; text-align: center; }
+        .input-group { margin-bottom: 20px; }
+        input[type="password"] { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #475569; background: #0f172a; color: #fff; font-size: 1rem; text-align: center; letter-spacing: 4px; }
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 1rem; transition: 0.2s; margin-top: 10px; }
+        .btn-on { background: #22c55e; color: #fff; }
+        .btn-off { background: #ef4444; color: #fff; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .status { text-align: center; margin-top: 15px; font-size: 0.85rem; color: #94a3b8; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Salon Kontrol</h1>
+        
+        <div class="input-group">
+            <input type="password" id="pinInput" placeholder="PIN Kodu Girin" maxlength="6">
+        </div>
+
+        <button id="btnOn" class="btn btn-on" onclick="sendCommand('1')">LÂMBAYI AÇ</button>
+        <button id="btnOff" class="btn btn-off" onclick="sendCommand('0')">LÂMBAYI KAPAT</button>
+        
+        <div id="statusText" class="status">Hazır</div>
+    </div>
+
+    <script>
+        // Tarayıcı hafızasındaki eski PIN'i otomatik yükle
+        const pinInput = document.getElementById("pinInput");
+        const statusText = document.getElementById("statusText");
+        
+        if (localStorage.getItem("saved_pin")) {
+            pinInput.value = localStorage.getItem("saved_pin");
+        }
+
+        async function sendCommand(state) {
+            const pin = pinInput.value.trim();
+            if (!pin) {
+                statusText.innerText = "Lütfen önce PIN girin!";
+                statusText.style.color = "#ef4444";
+                return;
+            }
+
+            localStorage.setItem("saved_pin", pin);
+            statusText.innerText = "İletiliyor...";
+            statusText.style.color = "#94a3b8";
+
+            try {
+                const res = await fetch("/api/control", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "x-secret-pin": pin
+                    },
+                    body: JSON.stringify({
+                        topic: "ev/salon/lamba",
+                        state: state
+                    })
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    statusText.innerText = state === "1" ? "Lamba Açıldı" : "Lamba Kapatıldı";
+                    statusText.style.color = "#22c55e";
+                } else {
+                    statusText.innerText = data.error || "Hata oluştu!";
+                    statusText.style.color = "#ef4444";
+                }
+            } catch (err) {
+                statusText.innerText = "Sunucuya ulaşılamadı!";
+                statusText.style.color = "#ef4444";
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+{
+  "name": "sutluce-ev-app",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "mqtt": "^5.3.5"
+  }
+}
