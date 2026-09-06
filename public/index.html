@@ -34,21 +34,21 @@
             --skel-bg: #2a2a2a;
         }
 
-        /* OTOMATİK SİSTEM GEÇİŞİ İÇİN YEDEK (Kullanıcı manuel seçeneğe basmadıysa) */
         @media (prefers-color-scheme: dark) {
             :root:not([data-theme="light"]) {
                 --primary: #8ab4f8; --primary-bg: #1a233a;
                 --bg: #121212; --surface: #1e1e1e;
                 --text: #e3e3e3; --text-sec: #a0a0a0;
-                --border: #333333; --success: #81c995; --warning: #fde293;
+                --border: #333333;
                 --skel-bg: #2a2a2a;
             }
         }
         
-        body { margin: 0; font-family: 'Google Sans', Roboto, sans-serif; background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; font-size: 15px; user-select: none; -webkit-tap-highlight-color: transparent; }
+        /* 100dvh mobil tarayıcılardaki adres çubuğu sorununu çözer */
+        body { margin: 0; font-family: 'Google Sans', Roboto, sans-serif; background: var(--bg); color: var(--text); display: flex; height: 100dvh; overflow: hidden; font-size: 15px; user-select: none; -webkit-tap-highlight-color: transparent; }
         
         /* Yan Menü */
-        .sidebar { width: 260px; background: var(--surface); border-right: 1px solid var(--border); padding: 24px 0; display: flex; flex-direction: column; z-index: 10; transition: background 0.3s, border 0.3s; }
+        .sidebar { width: 260px; background: var(--surface); border-right: 1px solid var(--border); padding: 24px 0; display: flex; flex-direction: column; z-index: 10; transition: background 0.3s, border 0.3s; flex-shrink: 0; }
         .logo { padding: 0 24px 24px; font-size: 22px; font-weight: 500; display: flex; align-items: center; gap: 12px; }
         .nav-section-title { font-size: 12px; font-weight: 700; color: var(--text-sec); letter-spacing: 1px; padding: 12px 24px 4px; text-transform: uppercase; }
         .nav-item { padding: 12px 24px; margin: 4px 12px; border-radius: 0 24px 24px 0; cursor: pointer; display: flex; align-items: center; gap: 16px; color: var(--text-sec); font-weight: 500; transition: 0.2s; font-size: 15px; }
@@ -60,7 +60,7 @@
         .header { margin-bottom: 32px; display: flex; justify-content: space-between; align-items: center; }
         .header h1 { margin: 0; font-size: 28px; font-weight: 400; }
         
-        /* Üst Kontrol Butonları (Ses / Tema) */
+        /* Üst Kontrol Butonları */
         .top-controls { display: flex; gap: 12px; align-items: center; }
         .btn-small { background: transparent; border: 1px solid var(--border); border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-sec); transition: 0.2s; }
         .btn-small:hover { background: var(--border); }
@@ -79,9 +79,8 @@
         .card-title .material-symbols-outlined { color: var(--primary); font-size: 28px; }
         
         .dash-cam-box { width: 100%; height: 160px; background: #202124; border-radius: 12px; margin-top: 16px; display: flex; align-items: center; justify-content: center; color: #fff; position: relative; }
-        .dash-cam-controls { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; }
+        .dash-cam-controls { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; flex-wrap: wrap; gap: 12px; }
         .dash-stream-btn { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 500; color: var(--primary); cursor: pointer; padding: 8px 12px; border-radius: 8px; transition: 0.2s; }
-        .dash-stream-btn:hover { background: var(--primary-bg); }
         
         .switch-wrapper { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; color: var(--text-sec); }
         .switch { position: relative; display: inline-block; width: 42px; height: 24px; }
@@ -92,9 +91,7 @@
         input:checked + .slider:before { transform: translateX(18px); }
 
         .action-area { display: flex; justify-content: space-evenly; align-items: center; padding: 24px 0 8px; gap: 20px; }
-        
-        /* Flex Alignment düzeltildi (İkon sola kaymasını engeller) */
-        .btn-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: center; } 
+        .btn-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; } 
         
         .icon-btn { width: 72px; height: 72px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.1s, background 0.3s; }
         .icon-btn:active { transform: scale(0.92); }
@@ -126,25 +123,39 @@
         
         /* TERMİNAL & FİLTRELER */
         #page-terminal { background: #121212; color: #e8eaed; border-radius: 16px; padding: 24px; border: 1px solid var(--border); font-family: 'Roboto Mono', monospace; font-size: 14px; height: calc(100vh - 180px); display: flex; flex-direction: column; }
-        .log-filters { display: flex; gap: 12px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #333; overflow-x: auto; }
+        .log-filters { display: flex; gap: 12px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #333; overflow-x: auto; scrollbar-width: none; }
         .filter-chip { background: transparent; border: 1px solid #5f6368; color: #9aa0a6; padding: 8px 20px; border-radius: 20px; font-family: 'Google Sans', sans-serif; font-size: 14px; cursor: pointer; transition: 0.2s; white-space: nowrap; }
         .filter-chip.active { background: var(--primary); color: #fff; border-color: var(--primary); font-weight: 600; }
         
         #log-box { flex: 1; overflow-y: auto; }
         .log-line { margin-bottom: 14px; line-height: 1.5; padding-bottom: 10px; border-bottom: 1px dashed #333; }
-        .log-time { color: #9aa0a6; margin-right: 14px; }
+        .log-time { color: #9aa0a6; margin-right: 14px; font-size: 12px; }
         .log-tag { font-weight: 600; margin-right: 14px; }
-        .log-tag.system { color: #fde293; }
-        .log-tag.ic_kapi { color: #81c995; }
-        .log-tag.dis_kapi { color: #f28b82; }
-        .log-tag.salon { color: #8ab4f8; }
 
+        /* MOBİL UYUMLULUK DÜZELTMELERİ (Bottom Nav & Taşmalar) */
         @media (max-width: 768px) {
-            body { flex-direction: column; }
-            .sidebar { width: 100%; flex-direction: row; flex-wrap: wrap; justify-content: space-around; padding: 8px 0; order: 2; z-index: 100; border-top: 1px solid var(--border); border-right: none; }
+            body { flex-direction: column; height: 100dvh; } /* 100dvh ile alt bar sorunu çözümü */
+            .sidebar { 
+                width: 100%; 
+                flex-direction: row; 
+                flex-wrap: nowrap; 
+                justify-content: space-between; 
+                padding: 8px 12px calc(8px + env(safe-area-inset-bottom)); /* iOS Ana Ekran Çubuğu Boşluğu */
+                order: 2; 
+                z-index: 100; 
+                border-top: 1px solid var(--border); 
+                border-right: none; 
+            }
             .logo, .nav-section-title { display: none; }
-            .nav-item { flex-direction: column; gap: 4px; padding: 8px; margin: 0; font-size: 12px; border-radius: 12px; }
-            .main { order: 1; padding: 20px; height: calc(100vh - 80px); overflow-y: auto; }
+            .nav-item { flex-direction: column; gap: 4px; padding: 8px 0; margin: 0; font-size: 11px; flex: 1; text-align: center; border-radius: 8px; justify-content: center; }
+            .nav-item .material-symbols-outlined { font-size: 24px; margin: 0; }
+            .main { order: 1; flex: 1; padding: 20px 16px; overflow-y: auto; } /* flex:1 ile kalan yüksekliği doldurur */
+            .header h1 { font-size: 24px; }
+            
+            /* Metrik kutuları mobilde yan yana taşmasın diye düzenlendi */
+            .metric-box { flex-direction: row; justify-content: space-between; align-items: center; padding: 12px; }
+            .metric-value { padding-left: 0; font-size: 16px; text-align: right; }
+            .metric-header { font-size: 12px; }
         }
     </style>
 </head>
@@ -153,21 +164,21 @@
         <div class="logo"><span class="material-symbols-outlined" style="color:var(--primary); font-size: 28px;">home_app_logo</span> Ev Kontrolü</div>
         
         <div class="nav-section-title">Merkez</div>
-        <div class="nav-item active" onclick="navTo('dashboard', this); hapticClick();"><span class="material-symbols-outlined">grid_view</span> Genel Bakış</div>
+        <div class="nav-item active" onclick="navTo('dashboard', this); hapticClick();"><span class="material-symbols-outlined">grid_view</span> <span class="nav-text">Genel</span></div>
         
         <div class="nav-section-title">Cihazlar (ESP32)</div>
-        <div class="nav-item" onclick="navTo('ic_kapi', this); hapticClick();"><span class="material-symbols-outlined">sensor_door</span> İç Kapı</div>
-        <div class="nav-item" onclick="navTo('dis_kapi', this); hapticClick();"><span class="material-symbols-outlined">nest_cam_outdoor</span> Dış Kamera</div>
-        <div class="nav-item" onclick="navTo('salon', this); hapticClick();"><span class="material-symbols-outlined">ac_unit</span> Salon</div>
+        <div class="nav-item" onclick="navTo('ic_kapi', this); hapticClick();"><span class="material-symbols-outlined">sensor_door</span> <span class="nav-text">İç Kapı</span></div>
+        <div class="nav-item" onclick="navTo('dis_kapi', this); hapticClick();"><span class="material-symbols-outlined">nest_cam_outdoor</span> <span class="nav-text">Kamera</span></div>
+        <div class="nav-item" onclick="navTo('salon', this); hapticClick();"><span class="material-symbols-outlined">ac_unit</span> <span class="nav-text">Salon</span></div>
         
         <div class="nav-section-title">Sistem</div>
-        <div class="nav-item" onclick="navTo('terminal', this); hapticClick();"><span class="material-symbols-outlined">terminal</span> Terminal</div>
+        <div class="nav-item" onclick="navTo('terminal', this); hapticClick();"><span class="material-symbols-outlined">terminal</span> <span class="nav-text">Terminal</span></div>
     </div>
 
     <div class="main">
         <div class="header">
             <h1 id="page-title">Genel Bakış</h1>
-            <!-- YENİ: Tema ve Ses Kontrolleri -->
+            <!-- Tema ve Ses Kontrolleri -->
             <div class="top-controls">
                 <button class="btn-small" onclick="toggleSound()" title="Sesi Aç/Kapat">
                     <span class="material-symbols-outlined" id="sound-icon">volume_up</span>
@@ -187,9 +198,9 @@
                 </div>
                 <div class="action-area">
                     <div class="btn-wrapper">
+                        <!-- Animasyon (Spinner) tamamen kaldırıldı -->
                         <button class="icon-btn" id="dash-btn-door" onclick="unlockDoor()">
                             <span class="material-symbols-outlined" id="dash-icon-door">lock</span>
-                            <div class="spinner" id="dash-spin-door"></div>
                         </button>
                         <div style="font-size:14px; font-weight:500; margin-top:12px;">Kapıyı Aç</div>
                     </div>
@@ -230,7 +241,6 @@
                     <span class="material-symbols-outlined" style="color:var(--text-sec);">chevron_right</span>
                 </div>
                 <div class="action-area">
-                    <!-- Flex Düzeltmesi (İkon kaymasını engeller) -->
                     <div class="btn-wrapper">
                         <button class="icon-btn active-state" id="dash-btn-ac" onclick="toggleAC()">
                             <span class="material-symbols-outlined" id="dash-icon-ac" style="color:var(--primary);">power_settings_new</span>
@@ -247,7 +257,6 @@
             <div class="card" style="align-items: center; padding: 40px 20px;">
                 <button class="icon-btn" id="btn-door" onclick="unlockDoor()" style="width:100px; height:100px;">
                     <span class="material-symbols-outlined" id="icon-door" style="font-size: 48px;">lock</span>
-                    <div class="spinner" id="spin-door" style="width:36px; height:36px;"></div>
                 </button>
                 <div style="font-weight: 500; font-size: 18px; margin-top: 20px;">Dış Kapıyı Aç (Push)</div>
             </div>
@@ -258,11 +267,11 @@
                     <div class="metric-grid">
                         <div class="metric-box">
                             <div class="metric-header"><span class="material-symbols-outlined" style="color:var(--text-sec); font-size:20px;">door_front</span> Kapı Durumu</div>
-                            <div class="metric-value skeleton" style="color:var(--success);">KİLİTLİ</div>
+                            <div class="metric-value skeleton" style="color:var(--success);" id="detail-door-status">KİLİTLİ</div>
                         </div>
                         <div class="metric-box">
                             <div class="metric-header"><span class="material-symbols-outlined" style="color:var(--text-sec); font-size:20px;">history</span> Son İşlem</div>
-                            <div class="metric-value skeleton" style="font-size:16px; padding-top:4px;">Bugün, 14:32</div>
+                            <div class="metric-value skeleton" id="detail-door-time">Bugün, 14:32</div>
                         </div>
                     </div>
                 </div>
@@ -302,7 +311,7 @@
                             <div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-purple); font-size:20px;">wifi</span> Sinyal</div>
                             <div class="metric-value skeleton">-58 dBm</div>
                         </div>
-                        <div class="metric-box" style="grid-column: span 2;">
+                        <div class="metric-box" style="grid-column: 1 / -1;">
                             <div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-blue); font-size:20px;">swap_vert</span> Veri Transferi</div>
                             <div class="metric-value skeleton">1.2 MB / 456 KB</div>
                         </div>
@@ -357,7 +366,7 @@
                     <div class="metric-grid">
                         <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-pink); font-size:20px;">network_ping</span> Ping</div><div class="metric-value skeleton">45 ms</div></div>
                         <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-purple); font-size:20px;">wifi</span> Sinyal</div><div class="metric-value skeleton">-72 dBm</div></div>
-                        <div class="metric-box" style="grid-column: span 2;"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-blue); font-size:20px;">swap_vert</span> Veri Transferi</div><div class="metric-value skeleton">18.4 MB / 1.1 MB</div></div>
+                        <div class="metric-box" style="grid-column: 1 / -1;"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-blue); font-size:20px;">swap_vert</span> Veri Transferi</div><div class="metric-value skeleton">18.4 MB / 1.1 MB</div></div>
                     </div>
                 </div>
             </div>
@@ -405,7 +414,7 @@
                     <div class="metric-grid">
                         <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-pink); font-size:20px;">network_ping</span> Ping</div><div class="metric-value skeleton">18 ms</div></div>
                         <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-purple); font-size:20px;">wifi</span> Sinyal</div><div class="metric-value skeleton">-42 dBm</div></div>
-                        <div class="metric-box" style="grid-column: span 2;"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-blue); font-size:20px;">swap_vert</span> Veri Transferi</div><div class="metric-value skeleton">420 KB / 12 KB</div></div>
+                        <div class="metric-box" style="grid-column: 1 / -1;"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-blue); font-size:20px;">swap_vert</span> Veri Transferi</div><div class="metric-value skeleton">420 KB / 12 KB</div></div>
                     </div>
                 </div>
             </div>
@@ -432,7 +441,7 @@
             window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(()=>{}); });
         }
 
-        // --- İSKELET YÜKLEYİCİ SİMÜLASYONU ---
+        // --- İSKELET YÜKLEYİCİ SİMÜLASYONU (Gecikme kaldırıldı - Anında açılır) ---
         window.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.skeleton').forEach(el => el.classList.remove('skeleton'));
             document.getElementById('dash-stream-icon').innerText = 'videocam_off';
@@ -460,7 +469,7 @@
             const icon = document.getElementById('sound-icon');
             icon.innerText = isSoundEnabled ? 'volume_up' : 'volume_off';
             icon.style.color = isSoundEnabled ? 'var(--text-sec)' : 'var(--c-pink)';
-            if(isSoundEnabled) hapticClick(); // Sesi açtığını onaylamak için
+            if(isSoundEnabled) hapticClick();
         }
 
         function initAudio() {
@@ -505,30 +514,36 @@
             document.getElementById('page-title').innerText = pages[pageId];
         }
 
-        // --- İÇ KAPI ---
+        // --- İÇ KAPI (ANINDA TEPKİ VEREN YAPI) ---
         function unlockDoor() {
-            hapticClick();
-            const dashBtn = document.getElementById('dash-btn-door'), dashIcon = document.getElementById('dash-icon-door'), dashSpin = document.getElementById('dash-spin-door');
-            const btn = document.getElementById('btn-door'), icon = document.getElementById('icon-door'), spin = document.getElementById('spin-door');
+            hapticSuccess(); // Tıklandığı an ses ve titreşim
             
-            [icon, dashIcon].forEach(i => i.style.display = 'none');
-            [spin, dashSpin].forEach(s => s.style.display = 'block');
-            addLog('ic_kapi', 'İÇ KAPI', 'Kilit açma komutu gönderiliyor...');
+            // Dashboard ve Detay Sayfası İkonları
+            const dashBtn = document.getElementById('dash-btn-door'), dashIcon = document.getElementById('dash-icon-door');
+            const btn = document.getElementById('btn-door'), icon = document.getElementById('icon-door');
+            const statusDetail = document.getElementById('detail-door-status');
+            const timeDetail = document.getElementById('detail-door-time');
+            const dashTime = document.getElementById('dash-ic-time');
+
+            // Beklemesiz Anında Görsel Değişim
+            [icon, dashIcon].forEach(i => { i.innerText = 'lock_open'; i.style.color = 'var(--success)'; });
+            [btn, dashBtn].forEach(b => b.classList.add('active-state'));
             
+            // Metin ve log güncellemeleri
+            statusDetail.innerText = 'AÇIK (BEKLENİYOR)';
+            statusDetail.style.color = 'var(--warning)';
+            dashTime.innerText = 'Şimdi';
+            timeDetail.innerText = 'Şimdi';
+            addLog('ic_kapi', 'İÇ KAPI', 'Kapı kilidi açıldı (Anında).');
+            
+            // 2 saniye sonra otomatik geri kilitlenme (Röle kapanması)
             setTimeout(() => {
-                hapticSuccess();
-                [spin, dashSpin].forEach(s => s.style.display = 'none');
-                [icon, dashIcon].forEach(i => { i.style.display = 'block'; i.innerText = 'lock_open'; i.style.color = 'var(--success)'; });
-                [btn, dashBtn].forEach(b => b.classList.add('active-state'));
-                document.getElementById('dash-ic-time').innerText = 'Şimdi';
-                addLog('ic_kapi', 'İÇ KAPI', 'Röle Çekildi (Açık).');
-                
-                setTimeout(() => {
-                    [icon, dashIcon].forEach(i => { i.innerText = 'lock'; i.style.color = 'var(--text-sec)'; });
-                    [btn, dashBtn].forEach(b => b.classList.remove('active-state'));
-                    addLog('ic_kapi', 'İÇ KAPI', 'Röle Bırakıldı (Kilitli).');
-                }, 2000);
-            }, 600);
+                [icon, dashIcon].forEach(i => { i.innerText = 'lock'; i.style.color = 'var(--text-sec)'; });
+                [btn, dashBtn].forEach(b => b.classList.remove('active-state'));
+                statusDetail.innerText = 'KİLİTLİ';
+                statusDetail.style.color = 'var(--success)';
+                addLog('ic_kapi', 'İÇ KAPI', 'Kapı tekrar kilitlendi.');
+            }, 2000);
         }
 
         // --- SALON KLİMA ---
