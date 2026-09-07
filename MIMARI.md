@@ -116,7 +116,8 @@ Prefix `ev/`. Cihazlar: `kapi`, `kamera`, `salon`. Payload = JSON (kamera karele
 | salon | `ac_set` *(ileride)* | `{"temp":24,"mode":"cool","fan":"auto"}` | IR gönder |
 
 `res` değerleri: `qvga` (320×240 ~240p) · `hvga` (480×320 ~320p) · `vga` (640×480 ~480p) ·
-`svga` (800×600 ~600p) · `xga` (1024×768 ~768p).
+`svga` (800×600 ~600p) · `xga` (1024×768 ~768p → firmware'de `svga`'ya kırpılır, PubSubClient sınırı).
+`stream_start` aynı zamanda keepalive: arayüz akış açıkken ~60 sn'de bir tekrar yollar.
 
 ### 5.2 `state` snapshot örnekleri
 
@@ -460,10 +461,16 @@ Adımlar:
 - [x] derleme: kapi ✅ salon ✅ kamera ✅
 - Not: PubSubClient publish daima QoS 0; `state`/`status`/`telemetry` retained yayınlanır.
 
-### Faz 3 — Firmware roller
-- [ ] `kamera`: MQTT kare akışı + `stream_set` canlı res/fps, sonra PIR + ışık
-- [ ] `kapi`: 2 sn pulse + event + ack
-- [ ] `salon`: IR klima aç/kapa
+### Faz 3 — Firmware roller ✅ (3 env de derlendi)
+- [x] `kapi`: 2 sn pulse + event + ack (Faz 2'de tamamlandı)
+- [x] `kamera`: esp_camera init + MQTT binary JPEG kare akışı, `stream_start/set/stop/snapshot`,
+      180 sn timeout, PIR hareket, ışık. **Sınır:** PubSubClient buffer 16-bit → pratikte ≤ SVGA;
+      `xga` istenirse `svga`'ya kırpılır. Buffer 50000'e çıkarılıyor (kamera env).
+- [x] `salon`: `IRac` ile klima aç/kapa (varsayılan protokol COOLIX, `Cfg::AC_PROTOCOL` ile değişir),
+      `ac_on` opsiyonel `{"temp":24}`. Flash %79.5 — büyürse `board_build.partitions = min_spiffs.csv`.
+- [ ] **[sen]** gerçek donanımda test (flash + seri monitör)
+- Akış keepalive: arayüz stream sayfası açıkken ~60 sn'de bir `stream_start` tekrar yollar;
+  gelmezse ESP 180 sn sonra otomatik durur.
 
 ### Faz 4 — Backend (Vercel)
 - [ ] `/api/session` (rpc app_login + HMAC cookie) + `/api/admin/users` (rpc app_create_user)

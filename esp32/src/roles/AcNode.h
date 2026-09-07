@@ -1,9 +1,13 @@
 #pragma once
 // ============================================================================
-//  ROLE_SALON — klimaya IR aç/kapa. (IR protokolü Faz 3'te IRremoteESP8266 ile.)
+//  ROLE_SALON — klimaya IR aç/kapa (IRremoteESP8266 / IRac).
+//  Klima markası Config.h -> Cfg::AC_PROTOCOL ile seçilir (varsayılan COOLIX,
+//  markasız/çoğu split klima ile uyumlu). Marka desteklenmiyorsa Faz sonrası
+//  ham (raw) yakala-tekrarla yöntemine geçilir.
 // ============================================================================
 
 #include <Arduino.h>
+#include <IRac.h>
 #include "../core/NetworkManager.h"
 #include "../core/CommandRouter.h"
 #include "../core/Logger.h"
@@ -18,11 +22,14 @@ public:
 
 private:
     void publishState();
-    void setAc(bool on, String& detail);
+    void applyAc(bool on, String& detail);
 
     NetworkManager& m_net;
     Logger&         m_log;
     IngestClient&   m_ingest;
     CommandRouter&  m_router;
-    bool            m_acOn = false;
+
+    IRac*   m_ac = nullptr;
+    bool    m_acOn  = false;
+    uint8_t m_temp  = 24;
 };
