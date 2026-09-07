@@ -81,6 +81,7 @@
         .dash-cam-box { width: 100%; height: 160px; background: #202124; border-radius: 12px; margin-top: 16px; display: flex; align-items: center; justify-content: center; color: #fff; position: relative; }
         .dash-cam-controls { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; flex-wrap: wrap; gap: 12px; }
         .dash-stream-btn { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 500; color: var(--primary); cursor: pointer; padding: 8px 12px; border-radius: 8px; transition: 0.2s; }
+        .dash-stream-btn:hover { background: var(--primary-bg); }
         
         .switch-wrapper { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; color: var(--text-sec); }
         .switch { position: relative; display: inline-block; width: 42px; height: 24px; }
@@ -514,6 +515,22 @@
             document.getElementById('page-title').innerText = pages[pageId];
         }
 
+        // --- VERCEL API HABERLEŞME MERKEZİ ---
+        async function sendCommand(device, cmd) {
+            try {
+                const response = await fetch('/api/control', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ pin: '1234', device: device, command: cmd })
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error || 'API Hatası');
+                addLog('system', 'SİSTEM', `Sunucu onayı: ${cmd} iletildi.`);
+            } catch (err) {
+                addLog('system', 'SİSTEM', `Bağlantı Hatası: ${err.message}`);
+            }
+        }
+
         // --- İÇ KAPI (ANINDA TEPKİ VEREN YAPI) ---
         function unlockDoor() {
             hapticSuccess(); // Tıklandığı an ses ve titreşim
@@ -535,6 +552,9 @@
             dashTime.innerText = 'Şimdi';
             timeDetail.innerText = 'Şimdi';
             addLog('ic_kapi', 'İÇ KAPI', 'Kapı kilidi açıldı (Anında).');
+
+            // --- API ÇAĞRISI EKLENDİ ---
+            sendCommand('ic_kapi', 'OPEN_DOOR');
             
             // 2 saniye sonra otomatik geri kilitlenme (Röle kapanması)
             setTimeout(() => {
@@ -561,6 +581,8 @@
                 dashStatus.innerHTML = '<span style="color:var(--c-blue); font-weight:bold;">AÇIK (24°C)</span>';
                 detailTemp.style.color = 'var(--c-blue)';
                 addLog('salon', 'SALON', 'Klima Açıldı (IR: 24°C).');
+                // --- API ÇAĞRISI EKLENDİ ---
+                sendCommand('salon', 'AC_ON_24');
             } else {
                 [btn, dashBtn].forEach(b => b.classList.remove('active-state'));
                 [icon, dashIcon].forEach(i => i.style.color = 'var(--text-sec)');
@@ -568,6 +590,8 @@
                 dashStatus.innerHTML = '<span style="color:var(--text-sec); font-weight:bold;">KAPALI</span>';
                 detailTemp.style.color = 'var(--text-sec)';
                 addLog('salon', 'SALON', 'Klima Kapatıldı (IR).');
+                // --- API ÇAĞRISI EKLENDİ ---
+                sendCommand('salon', 'AC_OFF');
             }
         }
 
@@ -579,6 +603,8 @@
             document.getElementById('dash-light-sw').checked = isLightOn;
             document.getElementById('detail-light-sw').checked = isLightOn;
             addLog('dis_kapi', 'DIŞ KAMERA', isLightOn ? 'Projektör AÇILDI.' : 'Projektör Kapatıldı.');
+            // --- API ÇAĞRISI EKLENDİ ---
+            sendCommand('dis_kapi', isLightOn ? 'LIGHT_ON' : 'LIGHT_OFF');
         }
 
         // --- DASHBOARD STREAM YÖNETİMİ ---
