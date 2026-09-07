@@ -25,6 +25,7 @@
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 body { margin: 0; font-family: 'Google Sans', Roboto, system-ui, sans-serif; background: var(--bg); color: var(--text); display: flex; height: 100dvh; overflow: hidden; font-size: 15px; -webkit-tap-highlight-color: transparent; }
 
 /* ---------- Sidebar ---------- */
