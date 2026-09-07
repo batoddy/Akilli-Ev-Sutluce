@@ -442,12 +442,6 @@
             window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(()=>{}); });
         }
 
-        // --- İSKELET YÜKLEYİCİ SİMÜLASYONU (Gecikme kaldırıldı - Anında açılır) ---
-        window.addEventListener('DOMContentLoaded', () => {
-            document.querySelectorAll('.skeleton').forEach(el => el.classList.remove('skeleton'));
-            document.getElementById('dash-stream-icon').innerText = 'videocam_off';
-        });
-
         // --- TEMA YÖNETİMİ ---
         let currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
         document.documentElement.setAttribute('data-theme', currentTheme);
@@ -464,7 +458,7 @@
         // --- SES VE HAPTIC FEEDBACK ---
         let isSoundEnabled = true;
         let audioCtx;
-        
+
         function toggleSound() {
             isSoundEnabled = !isSoundEnabled;
             const icon = document.getElementById('sound-icon');
@@ -531,45 +525,72 @@
             }
         }
 
-        // --- İÇ KAPI (ANINDA TEPKİ VEREN YAPI) ---
+        // --- BAŞLANGIÇ VERİLERİNİ ÇEKME (YENİ EKLENDİ) ---
+        async function loadInitialState() {
+            try {
+                const res = await fetch('/api/status');
+                const veritabanı = await res.json();
+                
+                // İç Kapı Zamanını Güncelle
+                if (veritabanı.ic_kapi) {
+                    const saat = new Date(veritabanı.ic_kapi.tarih).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+                    document.getElementById('dash-ic-time').innerText = saat;
+                    document.getElementById('detail-door-time').innerText = `Bugün, ${saat}`;
+                }
+                
+                // Klima Durumunu Senkronize Et
+                if (veritabanı.salon) {
+                    if (veritabanı.salon.komut === 'AC_ON_24' && !acState) toggleAC(true);
+                    else if (veritabanı.salon.komut === 'AC_OFF' && acState) toggleAC(true);
+                }
+                
+                // Dış Kamera Işığını Senkronize Et
+                if (veritabanı.dis_kapi) {
+                    if (veritabanı.dis_kapi.komut === 'LIGHT_ON' && !isLightOn) toggleCamLight(true, true);
+                    else if (veritabanı.dis_kapi.komut === 'LIGHT_OFF' && isLightOn) toggleCamLight(false, true);
+                }
+                
+            } catch (error) {
+                console.error("Veritabanı durum bilgisi alınamadı.", error);
+            } finally {
+                // İskeletleri kaldır (Veri gelsin veya gelmesin sayfa açılsın)
+                document.querySelectorAll('.skeleton').forEach(el => el.classList.remove('skeleton'));
+                document.getElementById('dash-stream-icon').innerText = 'videocam_off';
+            }
+        }
+
+        // Sayfa açıldığında verileri yükle
+        window.addEventListener('DOMContentLoaded', loadInitialState);
+
+        // --- DONANIM KONTROLLERİ ---
         function unlockDoor() {
-            hapticSuccess(); // Tıklandığı an ses ve titreşim
-            
-            // Dashboard ve Detay Sayfası İkonları
+            hapticSuccess();
             const dashBtn = document.getElementById('dash-btn-door'), dashIcon = document.getElementById('dash-icon-door');
             const btn = document.getElementById('btn-door'), icon = document.getElementById('icon-door');
-            const statusDetail = document.getElementById('detail-door-status');
-            const timeDetail = document.getElementById('detail-door-time');
-            const dashTime = document.getElementById('dash-ic-time');
+            const statusDetail = document.getElementById('detail-door-status'), timeDetail = document.getElementById('detail-door-time'), dashTime = document.getElementById('dash-ic-time');
 
-            // Beklemesiz Anında Görsel Değişim
             [icon, dashIcon].forEach(i => { i.innerText = 'lock_open'; i.style.color = 'var(--success)'; });
             [btn, dashBtn].forEach(b => b.classList.add('active-state'));
+            statusDetail.innerText = 'AÇIK (BEKLENİYOR)'; statusDetail.style.color = 'var(--warning)';
             
-            // Metin ve log güncellemeleri
-            statusDetail.innerText = 'AÇIK (BEKLENİYOR)';
-            statusDetail.style.color = 'var(--warning)';
-            dashTime.innerText = 'Şimdi';
-            timeDetail.innerText = 'Şimdi';
+            const simdi = new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+            dashTime.innerText = simdi; timeDetail.innerText = `Bugün, ${simdi}`;
+            
             addLog('ic_kapi', 'İÇ KAPI', 'Kapı kilidi açıldı (Anında).');
-
-            // --- API ÇAĞRISI EKLENDİ ---
             sendCommand('ic_kapi', 'OPEN_DOOR');
             
-            // 2 saniye sonra otomatik geri kilitlenme (Röle kapanması)
             setTimeout(() => {
                 [icon, dashIcon].forEach(i => { i.innerText = 'lock'; i.style.color = 'var(--text-sec)'; });
                 [btn, dashBtn].forEach(b => b.classList.remove('active-state'));
-                statusDetail.innerText = 'KİLİTLİ';
-                statusDetail.style.color = 'var(--success)';
+                statusDetail.innerText = 'KİLİTLİ'; statusDetail.style.color = 'var(--success)';
                 addLog('ic_kapi', 'İÇ KAPI', 'Kapı tekrar kilitlendi.');
             }, 2000);
         }
 
-        // --- SALON KLİMA ---
-        let acState = true;
-        function toggleAC() {
-            hapticSuccess();
+        // isSilent: Sayfa ilk açılışında veritabanı okunduğunda API'ye tekrar komut göndermeyi engeller
+        let acState = false; 
+        function toggleAC(isSilent = false) {
+            if(!isSilent) hapticSuccess();
             acState = !acState;
             const dashBtn = document.getElementById('dash-btn-ac'), dashIcon = document.getElementById('dash-icon-ac'), dashLbl = document.getElementById('dash-lbl-ac'), dashStatus = document.getElementById('dash-ac-status');
             const btn = document.getElementById('btn-ac'), icon = document.getElementById('icon-ac'), detailLbl = document.getElementById('detail-lbl-ac'), detailTemp = document.getElementById('detail-ac-temp');
@@ -580,34 +601,29 @@
                 [detailLbl, dashLbl].forEach(l => l.innerText = 'Klimayı Kapat');
                 dashStatus.innerHTML = '<span style="color:var(--c-blue); font-weight:bold;">AÇIK (24°C)</span>';
                 detailTemp.style.color = 'var(--c-blue)';
-                addLog('salon', 'SALON', 'Klima Açıldı (IR: 24°C).');
-                // --- API ÇAĞRISI EKLENDİ ---
-                sendCommand('salon', 'AC_ON_24');
+                if(!isSilent) { addLog('salon', 'SALON', 'Klima Açıldı (IR: 24°C).'); sendCommand('salon', 'AC_ON_24'); }
             } else {
                 [btn, dashBtn].forEach(b => b.classList.remove('active-state'));
                 [icon, dashIcon].forEach(i => i.style.color = 'var(--text-sec)');
                 [detailLbl, dashLbl].forEach(l => l.innerText = 'Klimayı Aç');
                 dashStatus.innerHTML = '<span style="color:var(--text-sec); font-weight:bold;">KAPALI</span>';
                 detailTemp.style.color = 'var(--text-sec)';
-                addLog('salon', 'SALON', 'Klima Kapatıldı (IR).');
-                // --- API ÇAĞRISI EKLENDİ ---
-                sendCommand('salon', 'AC_OFF');
+                if(!isSilent) { addLog('salon', 'SALON', 'Klima Kapatıldı (IR).'); sendCommand('salon', 'AC_OFF'); }
             }
         }
 
-        // --- DIŞ KAMERA IŞIK ---
         let isLightOn = false;
-        function toggleCamLight(state) {
-            hapticClick();
+        function toggleCamLight(state, isSilent = false) {
+            if(!isSilent) hapticClick();
             isLightOn = state;
             document.getElementById('dash-light-sw').checked = isLightOn;
             document.getElementById('detail-light-sw').checked = isLightOn;
-            addLog('dis_kapi', 'DIŞ KAMERA', isLightOn ? 'Projektör AÇILDI.' : 'Projektör Kapatıldı.');
-            // --- API ÇAĞRISI EKLENDİ ---
-            sendCommand('dis_kapi', isLightOn ? 'LIGHT_ON' : 'LIGHT_OFF');
+            if(!isSilent) {
+                addLog('dis_kapi', 'DIŞ KAMERA', isLightOn ? 'Projektör AÇILDI.' : 'Projektör Kapatıldı.');
+                sendCommand('dis_kapi', isLightOn ? 'LIGHT_ON' : 'LIGHT_OFF');
+            }
         }
 
-        // --- DASHBOARD STREAM YÖNETİMİ ---
         let isDashStreamPlaying = false;
         function toggleDashStream() {
             hapticClick();
@@ -629,7 +645,6 @@
             }
         }
 
-        // --- DETAY SAYFASI STREAM ---
         function startDetailStream(overlayElem) {
             hapticClick();
             overlayElem.innerHTML = '<div class="spinner" style="display:block; margin:auto; border-top-color:#fff;"></div><div style="margin-top:16px; font-size:14px;">Bağlanıyor...</div>';
@@ -641,7 +656,6 @@
             }, 1000);
         }
 
-        // --- TERMİNAL LOG & FİLTRELEME ---
         let currentFilter = 'all';
         function addLog(deviceId, tag, message) {
             const term = document.getElementById('log-box');
