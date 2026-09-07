@@ -1,4 +1,24 @@
-node_modules
-.env
-.env.local
-.vercel
+# --- Sırlar (ASLA commit edilmez) ---
+**/.env
+**/.env.*
+!**/.env.example
+**/secrets.h
+
+# --- Bağımlılıklar ---
+node_modules/
+
+# --- Vercel ---
+.vercel/
+**/.vercel/
+
+# --- PlatformIO / ESP32 build & IDE cache ---
+esp32/.pio/
+esp32/.vscode/.browse.c_cpp.db*
+esp32/.vscode/c_cpp_properties.json
+esp32/.vscode/launch.json
+esp32/.vscode/ipch/
+
+# --- OS / editör ---
+.DS_Store
+Thumbs.db
+*.swp
