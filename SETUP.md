@@ -16,8 +16,8 @@ Toplanan değerleri en alttaki tabloya yaz — Faz 4'te Vercel'e girilecek.
 **Supabase Dashboard → SQL Editor'i kullan** (supabase.com/dashboard → projen → SQL Editor).
 VS Code eklentisi (SQLTools vb.) çoklu komutu reddeder — "cannot insert multiple commands" hatası bu yüzden.
 
-- [ ] Web SQL Editor'de: `app/db/01_schema.sql` → `02_functions.sql` → `03_seed.sql` (sırayla, Run)
-- [ ] **VEYA** hepsi bir arada: `app/db/all_in_one.sql` (tek `DO` bloğu, tek komut — her araçtan geçer)
+- [ ] Web SQL Editor'de: `01_schema.sql` → `02_functions.sql` → `03_seed.sql` → `04_usage_fn.sql` (sırayla)
+- [ ] **VEYA** hepsi bir arada: `app/db/all_in_one.sql` (tek `DO` bloğu — her araçtan geçer, usage_add dahil)
 - [ ] Kontrol: Table Editor'de 8 tablo; `select id,name from devices;` → 3 satır.
 
 ### 2. İlk admin kullanıcı
@@ -57,14 +57,17 @@ Her biri için güçlü, farklı parola (parola yöneticisi kullan). Mümkünse 
 
 ---
 
-## Faz 4'te Vercel'e girilecek (şimdi sadece TOPLA)
+## Faz 4 — Vercel ortam değişkenleri
+
+Vercel → projen → **Settings → Environment Variables** → her satırı ekle (Production + Preview).
+Ekledikten sonra **Deployments → son deployment → Redeploy**.
 
 | Env değişkeni | Değer | Kaynak |
 |---|---|---|
 | `SUPABASE_URL` | | Supabase → Settings → API |
 | `SUPABASE_SERVICE_ROLE_KEY` | | aynı sayfa (gizli) |
 | `SUPABASE_ANON_KEY` | | aynı sayfa |
-| `HIVEMQ_HOST` | | HiveMQ Overview |
+| `HIVEMQ_HOST` | | HiveMQ Overview (`xxxx.s1.eu.hivemq.cloud`) |
 | `HIVEMQ_WSS_PORT` | `8884` | HiveMQ Overview |
 | `HIVEMQ_PUB_USER` | `srv-pub` | — |
 | `HIVEMQ_PUB_PASS` | | senin belirlediğin |
@@ -77,6 +80,10 @@ Her biri için güçlü, farklı parola (parola yöneticisi kullan). Mümkünse 
 **Rastgele secret üretmek** (herhangi biri):
 - Tarayıcı konsolu (F12): `crypto.randomUUID() + crypto.randomUUID()`
 - Ya da: https://generate-secret.vercel.app/32
+
+**Test (env girip redeploy sonrası):**
+- `https://<domain>/api/session` → GET → `{"error":"oturum yok"}` dönmeli (401 = endpoint çalışıyor)
+- `https://<domain>/api/ingest` → POST `{"secret":"yanlis","kind":"log","device":"kapi"}` → 401 dönmeli
 
 **ESP tarafı** (`esp32/include/secrets.h`, lokal — git'e girmez):
 | Makro | Değer |

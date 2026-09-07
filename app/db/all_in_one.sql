@@ -110,10 +110,23 @@ begin
     delete from usage_daily where day < current_date - 400;
   $fn$;
 
+  create or replace function usage_add(p_device text, p_day date, p_bytes bigint)
+  returns bigint language plpgsql security definer set search_path = public, extensions
+  as $fn$
+  declare v_total bigint;
+  begin
+    insert into usage_daily (device_id, day, bytes) values (p_device, p_day, p_bytes)
+    on conflict (device_id, day) do update set bytes = usage_daily.bytes + excluded.bytes
+    returning bytes into v_total;
+    return v_total;
+  end;
+  $fn$;
+
   revoke execute on function app_login(text, text)                from anon, authenticated;
   revoke execute on function app_create_user(text, text, boolean) from anon, authenticated;
   revoke execute on function app_set_user_disabled(text, boolean) from anon, authenticated;
   revoke execute on function cleanup_old_data()                   from anon, authenticated;
+  revoke execute on function usage_add(text, date, bigint)        from anon, authenticated;
 
   ---- Seed --------------------------------------------------------------
   insert into devices (id, name, kind) values

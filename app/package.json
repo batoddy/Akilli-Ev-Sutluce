@@ -1,8 +1,12 @@
 {
-  "name": "ev-kontrol-sistemi",
-  "version": "1.0.0",
-  "description": "Akıllı Ev Kontrol Sistemi PWA ve Sunucu API",
-  "main": "index.html",
+  "name": "sutluce-ev",
+  "version": "0.2.0",
+  "description": "Sütlüce Akıllı Ev — PWA arayüz + Vercel serverless API",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",
     "mqtt": "^5.10.0"

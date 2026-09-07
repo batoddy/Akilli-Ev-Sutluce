@@ -472,14 +472,19 @@ Adımlar:
 - Akış keepalive: arayüz stream sayfası açıkken ~60 sn'de bir `stream_start` tekrar yollar;
   gelmezse ESP 180 sn sonra otomatik durur.
 
-### Faz 4 — Backend (Vercel)
-- [ ] `/api/session` (rpc app_login + HMAC cookie) + `/api/admin/users` (rpc app_create_user)
-- [ ] `/api/command` (cookie auth, sunucudan publish)
-- [ ] `/api/ingest`
-- [ ] `/api/history` (+ usage_today/month)
-- [ ] `/api/usage`
-- [ ] `/api/cron/cleanup` + `vercel.json` cron
-- [ ] eski `control.js` / `status.js` kaldır, `package.json` sadeleştir
+### Faz 4 — Backend (Vercel) ✅ (deploy + env test bekliyor)
+- [x] `app/lib/`: `supabase.js` (service_role), `session.js` (HMAC cookie + subCreds), `mqtt.js` (srv-pub publish, warm cache)
+- [x] `/api/session` (POST giriş / GET yenile / DELETE çıkış — rpc app_login + HMAC cookie 30g)
+- [x] `/api/command` (cookie → `ev/<dev>/cmd` publish + `commands` satırı)
+- [x] `/api/ingest` (INGEST_SECRET → event/state/telemetry/command_ack/log → Supabase)
+- [x] `/api/history` (states + events + telemetry + usage_today/month)
+- [x] `/api/usage` (cookie → `usage_add` rpc atomik)
+- [x] `/api/admin/users` (GET/POST/PATCH, admin cookie)
+- [x] `/api/cron/cleanup` + `app/vercel.json` cron (0 4 * * *)
+- [x] `app/db/04_usage_fn.sql` (usage_add) + all_in_one'a eklendi
+- [x] eski `control.js` / `status.js` silindi, `package.json` (`type:module`) sadeleşti
+- [ ] **[sen]** Vercel env değişkenleri (`SETUP.md` Faz 4 tablosu) + redeploy
+- [ ] **[sen]** `/api/session` GET → 401, `/api/ingest` yanlış secret → 401 testi
 
 ### Faz 5 — Arayüz
 - [ ] `index.html` / `styles.css` / `app.js` böl
