@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sütlüce Ev — Sahte ESP Simülatörü</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 0; background: #111; color: #ddd; font-size: 14px; }
+  header { padding: 14px 20px; background: #1a1a1a; border-bottom: 1px solid #333; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  h1 { font-size: 16px; margin: 0; font-weight: 600; }
+  input { background: #222; border: 1px solid #444; color: #ddd; padding: 6px 8px; border-radius: 6px; font: inherit; }
+  button { background: #2962ff; border: none; color: #fff; padding: 7px 14px; border-radius: 6px; font: inherit; cursor: pointer; }
+  button.sec { background: #333; }
+  button.danger { background: #c62828; }
+  #pill { padding: 4px 10px; border-radius: 12px; font-weight: 600; background: #444; }
+  #pill.ok { background: #2e7d32; } #pill.err { background: #c62828; }
+  main { padding: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+  .card { background: #1a1a1a; border: 1px solid #333; border-radius: 10px; padding: 14px; }
+  .card h2 { font-size: 14px; margin: 0 0 10px; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; align-items: center; }
+  .kv { color: #888; }
+  pre#log { margin: 0 20px 20px; background: #000; border: 1px solid #333; border-radius: 8px; padding: 12px; height: 240px; overflow-y: auto; font-size: 12px; white-space: pre-wrap; }
+  canvas { border: 1px solid #333; border-radius: 6px; display: block; margin-top: 8px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🔧 Sahte ESP Simülatörü</h1>
+  <label class="kv">Host: <input id="host" value="fa08395c2dd14982bdb92eb61b723a91.s1.eu.hivemq.cloud" size="42"></label>
+  <label class="kv">User: <input id="user" value="esp-kapi" size="10"></label>
+  <label class="kv">Pass: <input id="pass" type="password" placeholder="esp-kapi parolası" size="16"></label>
+  <button id="btn-conn">Bağlan</button>
+  <button id="btn-off" class="danger" hidden>Çevrimdışı yap & kapat</button>
+  <span id="pill">bağlı değil</span>
+</header>
+
+<main>
+  <div class="card">
+    <h2>🚪 kapi</h2>
+    <div class="row"><span class="kv">röle:</span> <b id="k-relay">kapalı</b></div>
+    <div class="row"><span class="kv">son açılış:</span> <b id="k-last">—</b></div>
+    <button data-sim="kapi:open" class="sec">Elle "open" tetikle</button>
+  </div>
+
+  <div class="card">
+    <h2>📷 kamera</h2>
+    <div class="row"><span class="kv">ışık:</span> <b id="c-light">kapalı</b> · <span class="kv">yayın:</span> <b id="c-stream">kapalı</b></div>
+    <div class="row">
+      <button data-sim="motion" class="sec">Hareket simüle et</button>
+      <button data-sim="kamera:light_on" class="sec">ışık aç</button>
+      <button data-sim="kamera:light_off" class="sec">ışık kapa</button>
+    </div>
+    <canvas id="cv" width="320" height="180"></canvas>
+  </div>
+
+  <div class="card">
+    <h2>❄️ salon</h2>
+    <div class="row"><span class="kv">klima:</span> <b id="s-ac">kapalı</b> · <b id="s-temp">—</b></div>
+    <div class="row">
+      <button data-sim="salon:ac_on" class="sec">aç</button>
+      <button data-sim="salon:ac_off" class="sec">kapa</button>
+    </div>
+  </div>
+</main>
+
+<pre id="log"></pre>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
+<script>
+const DEVS = ['kapi', 'kamera', 'salon'];
+const st = {
+  kapi:   { online: true, relay: false, last_open_ts: 0, fw: 'SIM' },
+  kamera: { online: true, light: false, streaming: false, res: 'vga', fps: 0, last_motion_ts: 0, fw: 'SIM' },
+  salon:  { online: true, ac: false, temp: 24, fw: 'SIM' },
+};
+let client = null, streamTimer = null, telemetryTimer = null, boot = Date.now();
+
+const $ = (s) => document.querySelector(s);
+const now = () => Math.floor(Date.now() / 1000);
+function log(m) { const el = $('#log'); el.textContent += `[${new Date().toLocaleTimeString()}] ${m}\n`; el.scrollTop = el.scrollHeight; }
+function pill(t, c) { const p = $('#pill'); p.textContent = t; p.className = c || ''; }
+
+function pubState(d) { client.publish(`ev/${d}/state`, JSON.stringify(st[d]), { retain: true }); render(); }
+function pubEvent(d, o) { const e = { ...o, ts: now() }; client.publish(`ev/${d}/event`, JSON.stringify(e)); log(`→ ev/${d}/event ${JSON.stringify(e)}`); }
+function pubAck(d, id, cmd, ok, detail) {
+  client.publish(`ev/${d}/cmd/ack`, JSON.stringify({ id, cmd, result: ok ? 'ok' : 'error', detail: detail || null, ts: now() }));
+  log(`→ ack ${d} ${cmd} = ${ok ? 'ok' : 'err'}`);
+}
+
+function render() {
+  $('#k-relay').textContent = st.kapi.relay ? 'AÇIK' : 'kapalı';
+  $('#k-last').textContent = st.kapi.last_open_ts ? new Date(st.kapi.last_open_ts * 1000).toLocaleTimeString() : '—';
+  $('#c-light').textContent = st.kamera.light ? 'açık' : 'kapalı';
+  $('#c-stream').textContent = st.kamera.streaming ? `açık ${st.kamera.res}@${st.kamera.fps}` : 'kapalı';
+  $('#s-ac').textContent = st.salon.ac ? 'AÇIK' : 'kapalı';
+  $('#s-temp').textContent = st.salon.temp + '°C';
+}
+
+// -------- fake camera frames --------
+const cv = $('#cv'), cx = cv.getContext('2d');
+function drawFrame() {
+  const t = Date.now() / 1000;
+  cx.fillStyle = '#0a2540'; cx.fillRect(0, 0, cv.width, cv.height);
+  cx.fillStyle = '#1e88e5';
+  const x = (Math.sin(t) * 0.5 + 0.5) * (cv.width - 40);
+  cx.fillRect(x, 60, 40, 60);
+  cx.fillStyle = '#fff'; cx.font = '14px monospace';
+  cx.fillText('SIM ' + new Date().toLocaleTimeString(), 8, 20);
+}
+function sendFrame() {
+  drawFrame();
+  cv.toBlob((b) => b.arrayBuffer().then((buf) => {
+    if (client && client.connected) client.publish('ev/kamera/stream', new Uint8Array(buf), { qos: 0 });
+  }), 'image/jpeg', 0.5);
+}
+function startStream(res, fps) {
+  st.kamera.streaming = true; st.kamera.res = res || 'vga'; st.kamera.fps = fps || 5;
+  clearInterval(streamTimer);
+  streamTimer = setInterval(sendFrame, 1000 / st.kamera.fps);
+  pubState('kamera');
+}
+function stopStream() { clearInterval(streamTimer); streamTimer = null; st.kamera.streaming = false; st.kamera.fps = 0; pubState('kamera'); }
+
+// -------- command handler --------
+function onCmd(topic, payload) {
+  const d = topic.split('/')[1];
+  let m; try { m = JSON.parse(payload.toString()); } catch { return; }
+  log(`← ev/${d}/cmd ${payload.toString()}`);
+  const { id, cmd, args = {} } = m;
+
+  if (cmd === 'get_state') { pubState(d); return pubAck(d, id, cmd, true); }
+  if (cmd === 'reboot') { pubAck(d, id, cmd, true, 'sim reboot'); setTimeout(() => pubState(d), 500); return; }
+  if (cmd === 'set_log_level') return pubAck(d, id, cmd, true, args.level);
+
+  if (d === 'kapi' && cmd === 'open') {
+    if (st.kapi.relay) return pubAck(d, id, cmd, false, 'zaten acik');
+    st.kapi.relay = true; st.kapi.last_open_ts = now();
+    pubEvent('kapi', { type: 'door_open', source: 'web' });
+    pubAck(d, id, cmd, true, '2000ms pulse'); pubState('kapi');
+    setTimeout(() => { st.kapi.relay = false; pubState('kapi'); }, 2000);
+    return;
+  }
+  if (d === 'kamera') {
+    if (cmd === 'light_on')  { st.kamera.light = true;  pubState(d); return pubAck(d, id, cmd, true, 'acik'); }
+    if (cmd === 'light_off') { st.kamera.light = false; pubState(d); return pubAck(d, id, cmd, true, 'kapali'); }
+    if (cmd === 'stream_start') { startStream(args.res, args.fps); return pubAck(d, id, cmd, true, `${st.kamera.res}@${st.kamera.fps}`); }
+    if (cmd === 'stream_set')   { if (!st.kamera.streaming) return pubAck(d, id, cmd, false, 'akis kapali'); startStream(args.res, args.fps); return pubAck(d, id, cmd, true); }
+    if (cmd === 'stream_stop')  { stopStream(); return pubAck(d, id, cmd, true, 'durdu'); }
+    if (cmd === 'snapshot')     { sendFrame(); return pubAck(d, id, cmd, true, 'tek kare'); }
+  }
+  if (d === 'salon') {
+    if (cmd === 'ac_on')  { st.salon.ac = true;  if (args.temp) st.salon.temp = args.temp; pubEvent(d, { type: 'ac', on: true, temp: st.salon.temp }); pubState(d); return pubAck(d, id, cmd, true, `ac_on ${st.salon.temp}C`); }
+    if (cmd === 'ac_off') { st.salon.ac = false; pubEvent(d, { type: 'ac', on: false }); pubState(d); return pubAck(d, id, cmd, true, 'ac_off'); }
+  }
+  pubAck(d, id, cmd, false, 'bilinmeyen komut');
+}
+
+// -------- connect --------
+$('#btn-conn').onclick = () => {
+  const host = $('#host').value.trim();
+  const url = `wss://${host}:8884/mqtt`;
+  pill('bağlanıyor…');
+  client = mqtt.connect(url, {
+    username: $('#user').value.trim(), password: $('#pass').value,
+    clientId: 'sim-' + Math.random().toString(16).slice(2, 8),
+    clean: true, reconnectPeriod: 4000,
+    will: { topic: 'ev/kapi/status', payload: 'offline', retain: true, qos: 1 },
+  });
+  client.on('connect', () => {
+    pill('canlı', 'ok'); log('MQTT bağlandı: ' + url);
+    $('#btn-off').hidden = false;
+    DEVS.forEach((d) => {
+      client.publish(`ev/${d}/status`, 'online', { retain: true, qos: 1 });
+      pubState(d);
+      pubEvent(d, { type: 'boot', fw: 'SIM', reset_reason: 'sim' });
+    });
+    client.subscribe('ev/+/cmd', { qos: 1 });
+    clearInterval(telemetryTimer);
+    telemetryTimer = setInterval(() => {
+      DEVS.forEach((d) => client.publish(`ev/${d}/telemetry`, JSON.stringify({
+        rssi: -50 - Math.floor(Math.random() * 30),
+        heap: 180000 + Math.floor(Math.random() * 20000),
+        uptime: Math.floor((Date.now() - boot) / 1000),
+        ip: '192.168.1.' + (40 + DEVS.indexOf(d)),
+      }), { retain: true }));
+    }, 10000);
+  });
+  client.on('message', onCmd);
+  client.on('error', (e) => { pill('hata', 'err'); log('HATA: ' + e.message); });
+  client.on('close', () => pill('kapandı', 'err'));
+};
+
+$('#btn-off').onclick = () => {
+  if (!client) return;
+  DEVS.forEach((d) => client.publish(`ev/${d}/status`, 'offline', { retain: true, qos: 1 }));
+  clearInterval(telemetryTimer); clearInterval(streamTimer);
+  setTimeout(() => { client.end(true); pill('bağlı değil'); $('#btn-off').hidden = true; log('kapatıldı'); }, 300);
+};
+
+document.querySelectorAll('[data-sim]').forEach((b) => b.onclick = () => {
+  if (!client || !client.connected) return alert('önce Bağlan');
+  const v = b.dataset.sim;
+  if (v === 'motion') { st.kamera.last_motion_ts = now(); pubEvent('kamera', { type: 'motion' }); pubState('kamera'); return; }
+  const [d, cmd] = v.split(':');
+  onCmd(`ev/${d}/cmd`, JSON.stringify({ id: 'sim-' + now(), cmd, args: {} }));
+});
+
+render();
+</script>
+</body>
+</html>

@@ -353,12 +353,25 @@ function wireUI() {
     });
   }));
 
-  $$('.chip').forEach((c) => c.addEventListener('click', () => {
+  $$('.chip[data-filter]').forEach((c) => c.addEventListener('click', () => {
     S.filter = c.dataset.filter;
-    $$('.chip').forEach((x) => x.classList.toggle('active', x === c));
+    $$('.chip[data-filter]').forEach((x) => x.classList.toggle('active', x === c));
     $$('#log-box .log-line').forEach((l) => (l.hidden = S.filter !== 'all' && l.dataset.dev !== S.filter));
     const box = $('#log-box'); box.scrollTop = box.scrollHeight;
   }));
+  $('#term-clear').addEventListener('click', () => { $('#log-box').innerHTML = ''; });
+  $('#term-refresh').addEventListener('click', refreshTerminal);
+}
+
+async function refreshTerminal() {
+  const btn = $('#term-refresh'); btn.disabled = true;
+  try {
+    const j = await api('/api/history');
+    $('#log-box').innerHTML = '';
+    seedTerminal(j);
+  } catch (e) {
+    addLog('sys', 'WARN', 'geçmiş yenilenemedi: ' + e.message);
+  } finally { btn.disabled = false; }
 }
 
 const PAGE_TITLES = { dashboard: 'Genel Bakış', kapi: 'Dış Kapı', kamera: 'Kamera', salon: 'Salon Klima', terminal: 'Sistem Terminali' };
