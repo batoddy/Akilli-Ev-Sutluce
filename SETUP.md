@@ -12,11 +12,12 @@ Toplanan değerleri en alttaki tabloya yaz — Faz 4'te Vercel'e girilecek.
 
 ## Faz 1 — Supabase + HiveMQ
 
-### 1. Supabase şema — 3 dosya, SIRAYLA (SQL Editor → yapıştır → Run)
-- [ ] `app/db/01_schema.sql`  → tablolar + RLS (tek seferde çalışır)
-- [ ] `app/db/02_functions.sql` → fonksiyonlar. Hepsini birden dene; "cannot insert multiple
-      commands" hatası gelirse dosyadaki **░░ BLOK 1..5** bloklarını tek tek seç → Run.
-- [ ] `app/db/03_seed.sql`  → cihazlar (kapi/kamera/salon)
+### 1. Supabase şema
+**Supabase Dashboard → SQL Editor'i kullan** (supabase.com/dashboard → projen → SQL Editor).
+VS Code eklentisi (SQLTools vb.) çoklu komutu reddeder — "cannot insert multiple commands" hatası bu yüzden.
+
+- [ ] Web SQL Editor'de: `app/db/01_schema.sql` → `02_functions.sql` → `03_seed.sql` (sırayla, Run)
+- [ ] **VEYA** hepsi bir arada: `app/db/all_in_one.sql` (tek `DO` bloğu, tek komut — her araçtan geçer)
 - [ ] Kontrol: Table Editor'de 8 tablo; `select id,name from devices;` → 3 satır.
 
 ### 2. İlk admin kullanıcı
