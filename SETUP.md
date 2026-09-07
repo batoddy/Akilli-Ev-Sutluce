@@ -57,24 +57,23 @@ asıl korumamız. 5 kimlik, her birine **farklı güçlü parola** (min 8):
 Vercel → projen → **Settings → Environment Variables** → her satırı ekle (Production + Preview).
 Ekledikten sonra **Deployments → son deployment → Redeploy**.
 
-| Env değişkeni | Değer | Kaynak |
-|---|---|---|
-| `SUPABASE_URL` | | Supabase → Settings → API |
-| `SUPABASE_SERVICE_ROLE_KEY` | | aynı sayfa (gizli) |
-| `SUPABASE_ANON_KEY` | | aynı sayfa |
-| `HIVEMQ_HOST` | | HiveMQ Overview (`xxxx.s1.eu.hivemq.cloud`) |
-| `HIVEMQ_WSS_PORT` | `8884` | HiveMQ Overview |
-| `HIVEMQ_PUB_USER` | `srv-pub` | — |
-| `HIVEMQ_PUB_PASS` | | senin belirlediğin |
-| `HIVEMQ_SUB_USER` | `web-sub` | — |
-| `HIVEMQ_SUB_PASS` | | senin belirlediğin |
-| `INGEST_SECRET` | | rastgele üret (aşağıya bak) |
-| `SESSION_SECRET` | | rastgele üret |
-| `CRON_SECRET` | | rastgele üret |
+11 değişken (hepsi lokal `app/.env` dosyasında da hazır — oradan kopyala):
 
-**Rastgele secret üretmek** (herhangi biri):
-- Tarayıcı konsolu (F12): `crypto.randomUUID() + crypto.randomUUID()`
-- Ya da: https://generate-secret.vercel.app/32
+| Env değişkeni | Değer |
+|---|---|
+| `SUPABASE_URL` | `https://hlhaufgtnneswfjqjdfv.supabase.co` |
+| `SUPABASE_SERVICE_ROLE_KEY` | `app/.env`'deki `eyJ...` (service_role) |
+| `HIVEMQ_HOST` | HiveMQ → Overview → hostname (eski: `fa08395c...hivemq.cloud`, **doğrula**) |
+| `HIVEMQ_WSS_PORT` | `8884` |
+| `HIVEMQ_PUB_USER` | `srv-pub` |
+| `HIVEMQ_PUB_PASS` | `srv-pub` için belirlediğin parola |
+| `HIVEMQ_SUB_USER` | `web-sub` |
+| `HIVEMQ_SUB_PASS` | `web-sub` için belirlediğin parola |
+| `INGEST_SECRET` | `app/.env`'deki değer (üretildi) |
+| `SESSION_SECRET` | `app/.env`'deki değer (üretildi) |
+| `CRON_SECRET` | `app/.env`'deki değer (üretildi) |
+
+Her satırı **Production + Preview + Development** kutuları işaretli ekle.
 
 **Test (env girip redeploy sonrası):**
 - `https://<domain>/api/session` → GET → `{"error":"oturum yok"}` dönmeli (401 = endpoint çalışıyor)
