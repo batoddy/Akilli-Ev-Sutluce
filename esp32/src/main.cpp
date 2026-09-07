@@ -1,52 +1,76 @@
+// ============================================================================
+//  Sütlüce Akıllı Ev — ortak firmware iskeleti (3 rol build flag ile seçilir)
+//  MIMARI.md §9. Rol kodları: src/roles/
+// ============================================================================
 #include <Arduino.h>
 #include "Config.h"
-#include "Actuator.h"
-#include "NetworkManager.h"
+#include "Protocol.h"
+#include "core/Logger.h"
+#include "core/NetworkManager.h"
+#include "core/CommandRouter.h"
+#include "core/Telemetry.h"
+#include "core/IngestClient.h"
 
-Actuator salonLamba(Config::SALON_LAMBA_PIN);
+#if defined(ROLE_KAPI)
+  #include "roles/DoorRelay.h"
+#elif defined(ROLE_KAMERA)
+  #include "roles/CamNode.h"
+#elif defined(ROLE_SALON)
+  #include "roles/AcNode.h"
+#endif
 
-NetworkManager network(
-    Config::WIFI_SSID,
-    Config::WIFI_PASS,
-    Config::MQTT_SERVER,
-    Config::MQTT_PORT,
-    Config::MQTT_USER,
-    Config::MQTT_PASS
-);
+Logger         logger;
+NetworkManager net(logger, Cfg::WIFI_SSID, Cfg::WIFI_PASS,
+                   Cfg::MQTT_HOST, Cfg::MQTT_PORT, Cfg::MQTT_USER, Cfg::MQTT_PASS,
+                   DEVICE_ID);
+IngestClient   ingest(logger, Cfg::INGEST_URL, Cfg::INGEST_TOKEN, DEVICE_ID);
+CommandRouter  router(net, logger);
+Telemetry      telemetry(net, logger, ingest);
+
+#if defined(ROLE_KAPI)
+  DoorRelay role(net, logger, ingest, router);
+#elif defined(ROLE_KAMERA)
+  CamNode   role(net, logger, ingest, router);
+#elif defined(ROLE_SALON)
+  AcNode    role(net, logger, ingest, router);
+#endif
 
 void setup() {
     Serial.begin(115200);
-    delay(1000);
+    delay(300);
 
-    salonLamba.begin();
+    logger.begin(TOPIC_LOG, LogLevel::DEBUG, LogLevel::INFO);
+    logger.info("=== %s [%s] fw %s ===", DEVICE_NAME, DEVICE_ID, FW_VERSION);
 
-    // 1. MQTT'ye her bağlanıldığında (veya kopup geri geldiğinde) neye abone olunacak?
-    network.onConnected([]() {
-        Serial.println("[Network] Baglanti saglandi, kanallara abone olunuyor...");
-        
-        if (network.subscribe(Config::TOPIC_SALON_LAMBA)) {
-            Serial.printf("[Network] BASARILI: '%s' kanalina abone olundu ve dinleniyor.\n", Config::TOPIC_SALON_LAMBA);
-        } else {
-            Serial.println("[Network] HATA: Kanala abone olunamadi!");
-        }
+    net.onMessage([](const String& t, const String& p) { router.handle(t, p); });
+
+    net.onConnected([]() {
+        role.onConnected();
     });
 
-    // 2. Gelen mesajları yönlendir (Router)
-    network.onMessage([](const String& topic, const String& payload) {
-        Serial.printf("[Event] Topic: %s | Payload: %s\n", topic.c_str(), payload.c_str());
-
-        if (topic == Config::TOPIC_SALON_LAMBA) {
-            if (payload == "1") {
-                salonLamba.turnOn();
-            } else if (payload == "0") {
-                salonLamba.turnOff();
-            }
-        }
+    // ACK'i MQTT'nin yanı sıra /api/ingest'e de yaz (kalıcı kayıt)
+    router.setAckSink([](const String& id, const String& cmd, bool ok,
+                         const String& detail, uint32_t ts) {
+        String d = "{\"id\":\"";      d += id;
+        d += "\",\"cmd\":\"";         d += cmd;
+        d += "\",\"result\":\"";      d += (ok ? "ok" : "error");
+        d += "\",\"detail\":";        d += (detail.length() ? ("\"" + detail + "\"") : String("null"));
+        d += "}";
+        ingest.post("command_ack", d, ts);
     });
 
-    network.begin();
+    net.begin();
+    logger.attachPublisher([](const char* topic, const char* payload) {
+        return net.publish(topic, payload, false);
+    });
+
+    role.begin();
+    logger.info("setup tamam, loop basliyor");
 }
 
 void loop() {
-    network.update();
+    net.loop();
+    role.loop();
+    telemetry.loop();
+    logger.tick();
 }

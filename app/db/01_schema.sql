@@ -4,7 +4,7 @@
 --  Idempotent: tekrar çalıştırılabilir.
 -- ============================================================================
 
-create extension if not exists pgcrypto;
+create extension if not exists pgcrypto with schema extensions;
 
 create table if not exists devices (
   id          text primary key,          -- 'kapi' | 'kamera' | 'salon'

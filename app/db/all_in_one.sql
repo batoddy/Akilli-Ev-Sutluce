@@ -9,7 +9,7 @@
 do $mig$
 begin
 
-  create extension if not exists pgcrypto;
+  create extension if not exists pgcrypto with schema extensions;
 
   ---- Tablolar ---------------------------------------------------------------
   create table if not exists devices (
@@ -77,7 +77,7 @@ begin
   ---- Fonksiyonlar -------------------------------------------------------
   create or replace function app_login(p_username text, p_password text)
   returns table(out_username text, out_is_admin boolean)
-  language sql security definer set search_path = public
+  language sql security definer set search_path = public, extensions
   as $fn$
     select u.username, u.is_admin from users u
     where u.username = p_username and u.disabled = false
@@ -85,7 +85,7 @@ begin
   $fn$;
 
   create or replace function app_create_user(p_username text, p_password text, p_is_admin boolean default false)
-  returns void language sql security definer set search_path = public
+  returns void language sql security definer set search_path = public, extensions
   as $fn$
     insert into users (username, password_hash, is_admin)
     values (p_username, crypt(p_password, gen_salt('bf', 12)), p_is_admin)
@@ -95,13 +95,13 @@ begin
   $fn$;
 
   create or replace function app_set_user_disabled(p_username text, p_disabled boolean)
-  returns void language sql security definer set search_path = public
+  returns void language sql security definer set search_path = public, extensions
   as $fn$
     update users set disabled = p_disabled where username = p_username;
   $fn$;
 
   create or replace function cleanup_old_data()
-  returns void language sql security definer set search_path = public
+  returns void language sql security definer set search_path = public, extensions
   as $fn$
     delete from events      where created_at < now() - interval '90 days';
     delete from commands    where created_at < now() - interval '60 days';

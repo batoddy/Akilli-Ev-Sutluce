@@ -9,7 +9,7 @@
 -- ░░ BLOK 1 ░░ ---------------------------------------------------------------
 create or replace function app_login(p_username text, p_password text)
 returns table(out_username text, out_is_admin boolean)
-language sql security definer set search_path = public
+language sql security definer set search_path = public, extensions
 as $func$
   select u.username, u.is_admin
   from users u
@@ -22,7 +22,7 @@ $func$;
 -- ░░ BLOK 2 ░░ ---------------------------------------------------------------
 create or replace function app_create_user(p_username text, p_password text, p_is_admin boolean default false)
 returns void
-language sql security definer set search_path = public
+language sql security definer set search_path = public, extensions
 as $func$
   insert into users (username, password_hash, is_admin)
   values (p_username, crypt(p_password, gen_salt('bf', 12)), p_is_admin)
@@ -36,7 +36,7 @@ $func$;
 -- ░░ BLOK 3 ░░ ---------------------------------------------------------------
 create or replace function app_set_user_disabled(p_username text, p_disabled boolean)
 returns void
-language sql security definer set search_path = public
+language sql security definer set search_path = public, extensions
 as $func$
   update users set disabled = p_disabled where username = p_username;
 $func$;
@@ -45,7 +45,7 @@ $func$;
 -- ░░ BLOK 4 ░░ ---------------------------------------------------------------
 create or replace function cleanup_old_data()
 returns void
-language sql security definer set search_path = public
+language sql security definer set search_path = public, extensions
 as $func$
   delete from events      where created_at < now() - interval '90 days';
   delete from commands    where created_at < now() - interval '60 days';

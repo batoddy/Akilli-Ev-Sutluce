@@ -448,13 +448,17 @@ Adımlar:
 - [ ] **[sen]** HiveMQ 5 kullanıcı + ACL (bkz. `SETUP.md`)
 - [ ] **[sen]** Değerleri `SETUP.md` env tablosuna not et
 
-### Faz 2 — Firmware çekirdeği
-- [ ] PlatformIO 3 env + `ROLE_*`
-- [ ] `NetworkManager`: LWT, backoff, NTP, `setBufferSize`
-- [ ] `Logger` (Serial + MQTT + rate-limit)
-- [ ] `CommandRouter` + ACK
-- [ ] `Telemetry` (MQTT 60 sn + ingest 5 dk)
-- [ ] `IngestClient`
+### Faz 2 — Firmware çekirdeği ✅ (derleme kontrolü bekliyor)
+- [x] PlatformIO 3 env + `ROLE_*` (`platformio.ini`)
+- [x] `Protocol.h` (topic makroları, rol→id)
+- [x] `NetworkManager`: LWT, exp-backoff, NTP, `setBufferSize`
+- [x] `Logger` (Serial + MQTT `ev/<dev>/log` + saniyede 5 rate-limit)
+- [x] `CommandRouter` + ACK (`reboot`/`set_log_level` dahili)
+- [x] `Telemetry` (MQTT 60 sn retained + ingest 5 dk + 24 sa heartbeat)
+- [x] `IngestClient` (HTTPS POST, bloklar — seyrek çağrı)
+- [x] rol iskeletleri: `DoorRelay` (tam), `AcNode`/`CamNode` (ışık+PIR gerçek, geri kalan Faz 3)
+- [ ] **[sen]** `pio run -e kapi` / `-e salon` / `-e kamera` derleme kontrolü
+- Not: PubSubClient publish daima QoS 0; `state`/`status`/`telemetry` retained yayınlanır.
 
 ### Faz 3 — Firmware roller
 - [ ] `kamera`: MQTT kare akışı + `stream_set` canlı res/fps, sonra PIR + ışık
