@@ -1,674 +1,201 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ev Kontrolü</title>
-    
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#1a73e8">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
-    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
-    <style>
-        :root {
-            --primary: #1a73e8; --primary-bg: #e8f0fe;
-            --bg: #f8f9fa; --surface: #ffffff;
-            --text: #202124; --text-sec: #5f6368;
-            --border: #dadce0; --success: #1e8e3e; --warning: #f29900;
-            --c-blue: #2196F3; --c-pink: #e91e63; --c-green: #4caf50;
-            --c-purple: #9c27b0; --c-orange: #ff9800; --c-cyan: #00bcd4;
-            --skel-bg: #e8eaed;
-        }
-
-        :root[data-theme="dark"] {
-            --primary: #8ab4f8; --primary-bg: #1a233a;
-            --bg: #121212; --surface: #1e1e1e;
-            --text: #e3e3e3; --text-sec: #a0a0a0;
-            --border: #333333; --success: #81c995; --warning: #fde293;
-            --skel-bg: #2a2a2a;
-        }
-
-        @media (prefers-color-scheme: dark) {
-            :root:not([data-theme="light"]) {
-                --primary: #8ab4f8; --primary-bg: #1a233a;
-                --bg: #121212; --surface: #1e1e1e;
-                --text: #e3e3e3; --text-sec: #a0a0a0;
-                --border: #333333;
-                --skel-bg: #2a2a2a;
-            }
-        }
-        
-        body { margin: 0; font-family: 'Google Sans', Roboto, sans-serif; background: var(--bg); color: var(--text); display: flex; height: 100dvh; overflow: hidden; font-size: 15px; user-select: none; -webkit-tap-highlight-color: transparent; }
-        
-        .sidebar { width: 260px; background: var(--surface); border-right: 1px solid var(--border); padding: 24px 0; display: flex; flex-direction: column; z-index: 10; transition: background 0.3s, border 0.3s; flex-shrink: 0; }
-        .logo { padding: 0 24px 24px; font-size: 22px; font-weight: 500; display: flex; align-items: center; gap: 12px; }
-        .nav-section-title { font-size: 12px; font-weight: 700; color: var(--text-sec); letter-spacing: 1px; padding: 12px 24px 4px; text-transform: uppercase; }
-        .nav-item { padding: 12px 24px; margin: 4px 12px; border-radius: 0 24px 24px 0; cursor: pointer; display: flex; align-items: center; gap: 16px; color: var(--text-sec); font-weight: 500; transition: 0.2s; font-size: 15px; }
-        .nav-item:hover { background: var(--border); }
-        .nav-item.active { background: var(--primary-bg); color: var(--primary); }
-        
-        .main { flex: 1; padding: 40px; overflow-y: auto; display: flex; flex-direction: column; transition: background 0.3s; }
-        .header { margin-bottom: 32px; display: flex; justify-content: space-between; align-items: center; }
-        .header h1 { margin: 0; font-size: 28px; font-weight: 400; }
-        
-        .top-controls { display: flex; gap: 12px; align-items: center; }
-        .btn-small { background: transparent; border: 1px solid var(--border); border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-sec); transition: 0.2s; }
-        .btn-small:hover { background: var(--border); }
-
-        .page-section { display: none !important; flex-direction: column; gap: 24px; }
-        .page-section.active { display: flex !important; }
-        #page-dashboard.active { display: grid !important; }
-        
-        .grid { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; align-items: start; }
-        .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px; display: flex; flex-direction: column; box-shadow: 0 1px 2px rgba(0,0,0,0.1); transition: 0.3s; }
-        
-        .card-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 14px; border-bottom: 1px solid var(--border); cursor: pointer; transition: 0.2s; }
-        .card-header:hover { opacity: 0.7; }
-        .card-title { display: flex; align-items: center; gap: 12px; font-size: 19px; font-weight: 500; }
-        .card-title .material-symbols-outlined { color: var(--primary); font-size: 28px; }
-        
-        .dash-cam-box { width: 100%; height: 160px; background: #202124; border-radius: 12px; margin-top: 16px; display: flex; align-items: center; justify-content: center; color: #fff; position: relative; }
-        .dash-cam-controls { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; flex-wrap: wrap; gap: 12px; }
-        .dash-stream-btn { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 500; color: var(--primary); cursor: pointer; padding: 8px 12px; border-radius: 8px; transition: 0.2s; }
-        .dash-stream-btn:hover { background: var(--primary-bg); }
-        
-        .switch-wrapper { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; color: var(--text-sec); }
-        .switch { position: relative; display: inline-block; width: 42px; height: 24px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; inset: 0; background-color: var(--border); transition: .3s; border-radius: 24px; }
-        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
-        input:checked + .slider { background-color: var(--warning); }
-        input:checked + .slider:before { transform: translateX(18px); }
-
-        .action-area { display: flex; justify-content: space-evenly; align-items: center; padding: 24px 0 8px; gap: 20px; }
-        .btn-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; } 
-        
-        .icon-btn { width: 72px; height: 72px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.1s, background 0.3s; }
-        .icon-btn:active { transform: scale(0.92); }
-        .icon-btn .material-symbols-outlined { font-size: 32px; color: var(--text-sec); transition: 0.3s; margin: 0; padding: 0; }
-        .icon-btn.active-state { background: var(--primary-bg); border-color: var(--primary); }
-        .icon-btn.active-state .material-symbols-outlined { color: var(--primary); }
-        
-        .spinner { border: 3px solid transparent; border-top: 3px solid var(--primary); border-radius: 50%; width: 28px; height: 28px; animation: spin 0.8s linear infinite; display: none; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-
-        .skeleton { position: relative; overflow: hidden; background-color: var(--skel-bg); border-radius: 8px; color: transparent !important; }
-        .skeleton * { visibility: hidden; }
-        .skeleton::after { content: ""; position: absolute; top: 0; right: 0; bottom: 0; left: 0; transform: translateX(-100%); background-image: linear-gradient(90deg, rgba(255, 255, 255, 0) 0, rgba(255, 255, 255, 0.2) 20%, rgba(255, 255, 255, 0.5) 60%, rgba(255, 255, 255, 0)); animation: shimmer 1.5s infinite; }
-        @keyframes shimmer { 100% { transform: translateX(100%); } }
-
-        .health-section-title { font-size: 16px; font-weight: 500; color: var(--text-sec); margin: 24px 0 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
-        .health-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
-        .health-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
-        .health-card h4 { margin: 0 0 16px 0; font-size: 15px; color: var(--text); }
-        
-        .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-        .metric-box { background: var(--bg); padding: 12px 16px; border-radius: 10px; display: flex; flex-direction: column; gap: 6px; }
-        .metric-header { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; color: var(--text-sec); }
-        .metric-value { font-size: 20px; font-weight: 600; color: var(--text); padding-left: 32px; min-width: 50px; min-height: 24px; }
-
-        .data-row { display: flex; justify-content: space-between; font-size: 13px; color: var(--text-sec); border-top: 1px solid var(--border); padding-top: 16px; margin-top: 20px; font-weight: 500; }
-        
-        #page-terminal { background: #121212; color: #e8eaed; border-radius: 16px; padding: 24px; border: 1px solid var(--border); font-family: 'Roboto Mono', monospace; font-size: 14px; height: calc(100vh - 180px); display: flex; flex-direction: column; }
-        .log-filters { display: flex; gap: 12px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #333; overflow-x: auto; scrollbar-width: none; }
-        .filter-chip { background: transparent; border: 1px solid #5f6368; color: #9aa0a6; padding: 8px 20px; border-radius: 20px; font-family: 'Google Sans', sans-serif; font-size: 14px; cursor: pointer; transition: 0.2s; white-space: nowrap; }
-        .filter-chip.active { background: var(--primary); color: #fff; border-color: var(--primary); font-weight: 600; }
-        
-        #log-box { flex: 1; overflow-y: auto; }
-        .log-line { margin-bottom: 14px; line-height: 1.5; padding-bottom: 10px; border-bottom: 1px dashed #333; }
-        .log-time { color: #9aa0a6; margin-right: 14px; font-size: 12px; }
-        .log-tag { font-weight: 600; margin-right: 14px; }
-
-        @media (max-width: 768px) {
-            body { flex-direction: column; height: 100dvh; }
-            .sidebar { 
-                width: 100%; 
-                flex-direction: row; 
-                flex-wrap: nowrap; 
-                justify-content: space-between; 
-                padding: 8px 12px calc(8px + env(safe-area-inset-bottom)); 
-                order: 2; 
-                z-index: 100; 
-                border-top: 1px solid var(--border); 
-                border-right: none; 
-            }
-            .logo, .nav-section-title { display: none; }
-            .nav-item { flex-direction: column; gap: 4px; padding: 8px 0; margin: 0; font-size: 11px; flex: 1; text-align: center; border-radius: 8px; justify-content: center; }
-            .nav-item .material-symbols-outlined { font-size: 24px; margin: 0; }
-            .main { order: 1; flex: 1; padding: 20px 16px; overflow-y: auto; }
-            .header h1 { font-size: 24px; }
-            
-            .metric-box { flex-direction: row; justify-content: space-between; align-items: center; padding: 12px; }
-            .metric-value { padding-left: 0; font-size: 16px; text-align: right; }
-            .metric-header { font-size: 12px; }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Sütlüce Ev Kontrolü</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1a73e8">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto+Mono&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="sidebar">
-        <div class="logo"><span class="material-symbols-outlined" style="color:var(--primary); font-size: 28px;">home_app_logo</span> Ev Kontrolü</div>
-        
-        <div class="nav-section-title">Merkez</div>
-        <div class="nav-item active" onclick="navTo('dashboard', this); hapticClick();"><span class="material-symbols-outlined">grid_view</span> <span class="nav-text">Genel</span></div>
-        
-        <div class="nav-section-title">Cihazlar (ESP32)</div>
-        <div class="nav-item" onclick="navTo('ic_kapi', this); hapticClick();"><span class="material-symbols-outlined">sensor_door</span> <span class="nav-text">İç Kapı</span></div>
-        <div class="nav-item" onclick="navTo('dis_kapi', this); hapticClick();"><span class="material-symbols-outlined">nest_cam_outdoor</span> <span class="nav-text">Kamera</span></div>
-        <div class="nav-item" onclick="navTo('salon', this); hapticClick();"><span class="material-symbols-outlined">ac_unit</span> <span class="nav-text">Salon</span></div>
-        
-        <div class="nav-section-title">Sistem</div>
-        <div class="nav-item" onclick="navTo('terminal', this); hapticClick();"><span class="material-symbols-outlined">terminal</span> <span class="nav-text">Terminal</span></div>
+
+<!-- ================= LOGIN ================= -->
+<div id="login" hidden>
+  <form class="box" id="login-form">
+    <h2><span class="material-symbols-outlined" style="color:var(--primary)">home_app_logo</span> Sütlüce Ev</h2>
+    <p>Devam etmek için giriş yap.</p>
+    <input type="text" id="li-user" placeholder="Kullanıcı adı" autocomplete="username" required>
+    <input type="password" id="li-pass" placeholder="Şifre" autocomplete="current-password" required>
+    <button type="submit" id="li-btn">Giriş</button>
+    <div class="err" id="li-err"></div>
+  </form>
+</div>
+
+<!-- ================= APP ================= -->
+<div class="sidebar">
+  <div class="logo"><span class="material-symbols-outlined" style="color:var(--primary);font-size:28px">home_app_logo</span> Sütlüce Ev</div>
+
+  <div class="nav-section-title">Merkez</div>
+  <div class="nav-item active" data-page="dashboard"><span class="material-symbols-outlined">grid_view</span> <span>Genel</span></div>
+
+  <div class="nav-section-title">Cihazlar</div>
+  <div class="nav-item" data-page="kapi"><span class="material-symbols-outlined">sensor_door</span> <span>Dış Kapı</span> <span class="dot" data-dot="kapi"></span></div>
+  <div class="nav-item" data-page="kamera"><span class="material-symbols-outlined">nest_cam_outdoor</span> <span>Kamera</span> <span class="dot" data-dot="kamera"></span></div>
+  <div class="nav-item" data-page="salon"><span class="material-symbols-outlined">ac_unit</span> <span>Salon</span> <span class="dot" data-dot="salon"></span></div>
+
+  <div class="nav-section-title">Sistem</div>
+  <div class="nav-item" data-page="terminal"><span class="material-symbols-outlined">terminal</span> <span>Terminal</span></div>
+</div>
+
+<div class="main">
+  <div class="header">
+    <h1 id="page-title">Genel Bakış</h1>
+    <div class="top-controls">
+      <div class="conn-pill" id="conn"><span class="d"></span> <span id="conn-txt">bağlanıyor…</span></div>
+      <button class="btn-small" id="btn-theme" title="Tema"><span class="material-symbols-outlined" id="theme-icon">dark_mode</span></button>
+      <button class="btn-small" id="btn-logout" title="Çıkış"><span class="material-symbols-outlined">logout</span></button>
+    </div>
+  </div>
+
+  <!-- ---------- DASHBOARD ---------- -->
+  <div id="page-dashboard" class="page-section active">
+
+    <div class="card">
+      <div class="card-header clickable" data-goto="kapi">
+        <div class="card-title"><span class="material-symbols-outlined" style="color:#8d6e63">sensor_door</span> Dış Kapı</div>
+        <span class="badge" data-badge="kapi">—</span>
+      </div>
+      <div class="action-area">
+        <div class="btn-wrapper">
+          <button class="icon-btn" data-cmd="kapi:open"><span class="material-symbols-outlined" data-icon="kapi-relay">lock</span></button>
+          <div class="btn-label">Kapıyı Aç</div>
+        </div>
+      </div>
+      <div class="data-row"><span>Son açılış</span><b data-field="kapi-last">—</b></div>
     </div>
 
-    <div class="main">
-        <div class="header">
-            <h1 id="page-title">Genel Bakış</h1>
-            <div class="top-controls">
-                <button class="btn-small" onclick="toggleSound()" title="Sesi Aç/Kapat">
-                    <span class="material-symbols-outlined" id="sound-icon">volume_up</span>
-                </button>
-                <button class="btn-small" onclick="toggleTheme()" title="Aydınlık/Karanlık Mod">
-                    <span class="material-symbols-outlined" id="theme-icon">dark_mode</span>
-                </button>
-            </div>
-        </div>
-
-        <!-- DASHBOARD -->
-        <div id="page-dashboard" class="page-section active grid">
-            <div class="card">
-                <div class="card-header" onclick="navTo('ic_kapi', document.querySelectorAll('.nav-item')[1]); hapticClick();">
-                    <div class="card-title"><span class="material-symbols-outlined" style="color: #795548;">sensor_door</span> İç Kapı</div>
-                    <span class="material-symbols-outlined" style="color:var(--text-sec);">chevron_right</span>
-                </div>
-                <div class="action-area">
-                    <div class="btn-wrapper">
-                        <button class="icon-btn" id="dash-btn-door" onclick="unlockDoor()">
-                            <span class="material-symbols-outlined" id="dash-icon-door">lock</span>
-                        </button>
-                        <div style="font-size:14px; font-weight:500; margin-top:12px;">Kapıyı Aç</div>
-                    </div>
-                </div>
-                <div class="data-row"><span>Son Komut:</span><span id="dash-ic-time" class="skeleton">...</span></div>
-            </div>
-
-            <div class="card">
-                <div class="card-header" onclick="navTo('dis_kapi', document.querySelectorAll('.nav-item')[2]); hapticClick();">
-                    <div class="card-title"><span class="material-symbols-outlined" style="color: var(--c-cyan);">nest_cam_outdoor</span> Dış Kamera</div>
-                    <span class="material-symbols-outlined" style="color:var(--text-sec);">chevron_right</span>
-                </div>
-                
-                <div class="dash-cam-box" id="dash-stream-box">
-                    <span class="material-symbols-outlined skeleton" style="font-size:40px; color:#5f6368;" id="dash-stream-icon">videocam_off</span>
-                </div>
-                
-                <div class="dash-cam-controls">
-                    <div class="dash-stream-btn" id="dash-stream-trigger" onclick="toggleDashStream()">
-                        <span class="material-symbols-outlined" id="dash-stream-btn-icon">play_arrow</span>
-                        <span id="dash-stream-btn-text">Yayını Başlat</span>
-                    </div>
-                    <div class="switch-wrapper">
-                        <span class="material-symbols-outlined" style="color:var(--c-orange); font-size:24px;">lightbulb</span>
-                        <label class="switch"><input type="checkbox" id="dash-light-sw" onchange="toggleCamLight(this.checked)"><span class="slider"></span></label>
-                    </div>
-                </div>
-                
-                <div class="data-row" style="margin-top:16px;">
-                    <span style="display:flex; align-items:center; gap:6px; color:var(--warning);"><span class="material-symbols-outlined" style="font-size:18px;">motion_sensor_active</span> Son Hareket</span>
-                    <span class="skeleton">...</span>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header" onclick="navTo('salon', document.querySelectorAll('.nav-item')[3]); hapticClick();">
-                    <div class="card-title"><span class="material-symbols-outlined" style="color: var(--c-blue);">ac_unit</span> Salon Klima</div>
-                    <span class="material-symbols-outlined" style="color:var(--text-sec);">chevron_right</span>
-                </div>
-                <div class="action-area">
-                    <div class="btn-wrapper">
-                        <button class="icon-btn" id="dash-btn-ac" onclick="toggleAC()">
-                            <span class="material-symbols-outlined" id="dash-icon-ac" style="color:var(--text-sec);">power_settings_new</span>
-                        </button>
-                        <div style="font-size:14px; font-weight:500; margin-top:12px;" id="dash-lbl-ac">Klimayı Aç</div>
-                    </div>
-                </div>
-                <div class="data-row"><span>Durum:</span><span id="dash-ac-status" style="color:var(--text-sec); font-weight:bold;" class="skeleton">BEKLENİYOR</span></div>
-            </div>
-        </div>
-
-        <!-- İÇ KAPI DETAY -->
-        <div id="page-ic_kapi" class="page-section">
-            <div class="card" style="align-items: center; padding: 40px 20px;">
-                <button class="icon-btn" id="btn-door" onclick="unlockDoor()" style="width:100px; height:100px;">
-                    <span class="material-symbols-outlined" id="icon-door" style="font-size: 48px;">lock</span>
-                </button>
-                <div style="font-weight: 500; font-size: 18px; margin-top: 20px;">Dış Kapıyı Aç (Push)</div>
-            </div>
-
-            <h3 class="health-section-title">Durum Verileri</h3>
-            <div class="health-grid" style="margin-bottom: 8px;">
-                <div class="health-card">
-                    <div class="metric-grid">
-                        <div class="metric-box">
-                            <div class="metric-header"><span class="material-symbols-outlined" style="color:var(--text-sec); font-size:20px;">door_front</span> Kapı Durumu</div>
-                            <div class="metric-value skeleton" style="color:var(--success);" id="detail-door-status">BEKLENİYOR</div>
-                        </div>
-                        <div class="metric-box">
-                            <div class="metric-header"><span class="material-symbols-outlined" style="color:var(--text-sec); font-size:20px;">history</span> Son İşlem</div>
-                            <div class="metric-value skeleton" id="detail-door-time">...</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <h3 class="health-section-title">Sistem Sağlığı (ESP-1)</h3>
-            <div class="health-grid">
-                <div class="health-card">
-                    <h4>Donanım Durumu</h4>
-                    <div class="metric-grid">
-                        <div class="metric-box">
-                            <div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-green); font-size:20px;">memory</span> CPU</div>
-                            <div class="metric-value skeleton">--%</div>
-                        </div>
-                        <div class="metric-box">
-                            <div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-green); font-size:20px;">save</span> RAM Boş</div>
-                            <div class="metric-value skeleton">-- KB</div>
-                        </div>
-                        <div class="metric-box">
-                            <div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-orange); font-size:20px;">bolt</span> Tüketim</div>
-                            <div class="metric-value skeleton">-- mA</div>
-                        </div>
-                        <div class="metric-box">
-                            <div class="metric-header"><span class="material-symbols-outlined" style="color:var(--text-sec); font-size:20px;">schedule</span> Uptime</div>
-                            <div class="metric-value skeleton">--</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="health-card">
-                    <h4>Ağ & Bağlantı</h4>
-                    <div class="metric-grid">
-                        <div class="metric-box">
-                            <div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-pink); font-size:20px;">network_ping</span> Ping</div>
-                            <div class="metric-value skeleton">-- ms</div>
-                        </div>
-                        <div class="metric-box">
-                            <div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-purple); font-size:20px;">wifi</span> Sinyal</div>
-                            <div class="metric-value skeleton">-- dBm</div>
-                        </div>
-                        <div class="metric-box" style="grid-column: 1 / -1;">
-                            <div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-blue); font-size:20px;">swap_vert</span> Veri Transferi</div>
-                            <div class="metric-value skeleton">--</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- DIŞ KAMERA DETAY -->
-        <div id="page-dis_kapi" class="page-section">
-            <div class="card" style="padding:0; overflow:hidden;">
-                <div style="position: relative; width: 100%; background: #202124; aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center; color: #fff;" id="detail-cam-box">
-                    <div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; background: rgba(0,0,0,0.4);" onclick="startDetailStream(this)">
-                        <span class="material-symbols-outlined" style="font-size:56px; margin-bottom:12px;">play_circle</span>
-                        <span style="font-size:16px;">Tam Ekran Yayını Başlat</span>
-                    </div>
-                </div>
-                <div style="padding: 20px; display: flex; justify-content: space-between; align-items: center;">
-                    <div class="switch-wrapper">
-                        <span class="material-symbols-outlined" style="color:var(--c-orange); font-size:24px;">lightbulb</span> Projektör
-                        <label class="switch"><input type="checkbox" id="detail-light-sw" onchange="toggleCamLight(this.checked)"><span class="slider"></span></label>
-                    </div>
-                    <button style="background:transparent; border:none; color:var(--primary); font-weight:600; cursor:pointer; font-size:14px;" onclick="hapticClick(); alert('Tam ekran modülü')">TAM EKRAN</button>
-                </div>
-            </div>
-
-            <h3 class="health-section-title">Sensör Verileri</h3>
-            <div class="health-grid" style="margin-bottom: 8px;">
-                <div class="health-card">
-                    <div class="metric-grid" style="grid-template-columns: 1fr;">
-                        <div class="metric-box">
-                            <div class="metric-header"><span class="material-symbols-outlined" style="color:var(--warning); font-size:20px;">motion_sensor_active</span> Son Hareket Algılandı</div>
-                            <div class="metric-value skeleton" style="color:var(--warning);">...</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <h3 class="health-section-title">Sistem Sağlığı (ESP-2 CAM)</h3>
-            <div class="health-grid">
-                <div class="health-card">
-                    <h4>Donanım Durumu</h4>
-                    <div class="metric-grid">
-                        <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-green); font-size:20px;">memory</span> CPU</div><div class="metric-value skeleton">--%</div></div>
-                        <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-green); font-size:20px;">save</span> RAM Boş</div><div class="metric-value skeleton">-- MB</div></div>
-                        <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-orange); font-size:20px;">bolt</span> Tüketim</div><div class="metric-value skeleton">-- mA</div></div>
-                        <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--text-sec); font-size:20px;">schedule</span> Uptime</div><div class="metric-value skeleton">--</div></div>
-                    </div>
-                </div>
-                <div class="health-card">
-                    <h4>Ağ & Bağlantı</h4>
-                    <div class="metric-grid">
-                        <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-pink); font-size:20px;">network_ping</span> Ping</div><div class="metric-value skeleton">-- ms</div></div>
-                        <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-purple); font-size:20px;">wifi</span> Sinyal</div><div class="metric-value skeleton">-- dBm</div></div>
-                        <div class="metric-box" style="grid-column: 1 / -1;"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-blue); font-size:20px;">swap_vert</span> Veri Transferi</div><div class="metric-value skeleton">--</div></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- SALON DETAY -->
-        <div id="page-salon" class="page-section">
-            <div class="card" style="align-items: center; padding: 40px 20px;">
-                <div style="font-size: 56px; font-weight: 300; margin-bottom: 32px; color:var(--text-sec);" id="detail-ac-temp" class="skeleton">--°C</div>
-                <button class="icon-btn" id="btn-ac" onclick="toggleAC()">
-                    <span class="material-symbols-outlined" id="icon-ac" style="font-size: 48px; color:var(--text-sec);">power_settings_new</span>
-                </button>
-                <div style="font-weight: 500; font-size: 18px; margin-top: 20px;" id="detail-lbl-ac">Klimayı Aç</div>
-            </div>
-
-            <h3 class="health-section-title">Ortam Sensörleri</h3>
-            <div class="health-grid" style="margin-bottom: 8px;">
-                <div class="health-card">
-                    <div class="metric-grid">
-                        <div class="metric-box">
-                            <div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-orange); font-size:20px;">thermostat</span> Sıcaklık</div>
-                            <div class="metric-value skeleton">-- °C</div>
-                        </div>
-                        <div class="metric-box">
-                            <div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-cyan); font-size:20px;">water_drop</span> Nem</div>
-                            <div class="metric-value skeleton">-- %</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <h3 class="health-section-title">Sistem Sağlığı (ESP-3)</h3>
-            <div class="health-grid">
-                <div class="health-card">
-                    <h4>Donanım Durumu</h4>
-                    <div class="metric-grid">
-                        <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-green); font-size:20px;">memory</span> CPU</div><div class="metric-value skeleton">--%</div></div>
-                        <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-green); font-size:20px;">save</span> RAM Boş</div><div class="metric-value skeleton">-- KB</div></div>
-                        <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-orange); font-size:20px;">bolt</span> Tüketim</div><div class="metric-value skeleton">-- mA</div></div>
-                        <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--text-sec); font-size:20px;">schedule</span> Uptime</div><div class="metric-value skeleton">--</div></div>
-                    </div>
-                </div>
-                <div class="health-card">
-                    <h4>Ağ & Bağlantı</h4>
-                    <div class="metric-grid">
-                        <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-pink); font-size:20px;">network_ping</span> Ping</div><div class="metric-value skeleton">-- ms</div></div>
-                        <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-purple); font-size:20px;">wifi</span> Sinyal</div><div class="metric-value skeleton">-- dBm</div></div>
-                        <div class="metric-box" style="grid-column: 1 / -1;"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-blue); font-size:20px;">swap_vert</span> Veri Transferi</div><div class="metric-value skeleton">--</div></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- TERMİNAL -->
-        <div id="page-terminal" class="page-section">
-            <div class="log-filters">
-                <button class="filter-chip active" onclick="filterLogs('all', this); hapticClick();">Tümü (Genel)</button>
-                <button class="filter-chip" onclick="filterLogs('system', this); hapticClick();">Sistem</button>
-                <button class="filter-chip" onclick="filterLogs('ic_kapi', this); hapticClick();">İç Kapı</button>
-                <button class="filter-chip" onclick="filterLogs('dis_kapi', this); hapticClick();">Dış Kamera</button>
-                <button class="filter-chip" onclick="filterLogs('salon', this); hapticClick();">Salon</button>
-            </div>
-            <div id="log-box">
-                <div class="log-line" data-device="system"><span class="log-time">Şimdi</span><span class="log-tag system">[SİSTEM]</span><span>Terminale bağlanıldı. Canlı loglar bekleniyor...</span></div>
-            </div>
-        </div>
+    <div class="card">
+      <div class="card-header clickable" data-goto="kamera">
+        <div class="card-title"><span class="material-symbols-outlined" style="color:var(--c-cyan)">nest_cam_outdoor</span> Kamera</div>
+        <span class="badge" data-badge="kamera">—</span>
+      </div>
+      <div class="cam-box" id="dash-cam"><div class="placeholder"><span class="material-symbols-outlined" style="font-size:34px">videocam_off</span></div><img alt="kamera"></div>
+      <div class="cam-controls">
+        <button class="stream-btn" data-stream-toggle><span class="material-symbols-outlined">play_arrow</span> <span>Yayını Başlat</span></button>
+        <label class="switch-row"><span class="material-symbols-outlined" style="color:var(--c-orange)">lightbulb</span>
+          <span class="switch"><input type="checkbox" data-light><span class="slider"></span></span></label>
+      </div>
+      <div class="data-row"><span style="display:flex;gap:6px;align-items:center;color:var(--warning)"><span class="material-symbols-outlined" style="font-size:18px">sensors</span> Son hareket</span><b data-field="kamera-motion">—</b></div>
     </div>
 
-    <script>
-        // --- PWA (Service Worker Kaydı) ---
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(()=>{}); });
-        }
+    <div class="card">
+      <div class="card-header clickable" data-goto="salon">
+        <div class="card-title"><span class="material-symbols-outlined" style="color:var(--c-blue)">ac_unit</span> Salon Klima</div>
+        <span class="badge" data-badge="salon">—</span>
+      </div>
+      <div class="action-area">
+        <div class="btn-wrapper">
+          <button class="icon-btn" data-ac-toggle><span class="material-symbols-outlined" data-icon="salon-ac">power_settings_new</span></button>
+          <div class="btn-label" data-field="salon-label">Klimayı Aç</div>
+        </div>
+      </div>
+      <div class="data-row"><span>Durum</span><b data-field="salon-status">—</b></div>
+    </div>
+  </div>
 
-        // --- TEMA YÖNETİMİ ---
-        let currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-        document.documentElement.setAttribute('data-theme', currentTheme);
-        document.addEventListener("DOMContentLoaded", () => { document.getElementById('theme-icon').innerText = currentTheme === 'dark' ? 'dark_mode' : 'light_mode'; });
+  <!-- ---------- KAPI ---------- -->
+  <div id="page-kapi" class="page-section">
+    <div class="card" style="align-items:center;padding:40px 20px">
+      <button class="icon-btn" data-cmd="kapi:open" style="width:100px;height:100px">
+        <span class="material-symbols-outlined" data-icon="kapi-relay" style="font-size:46px">lock</span>
+      </button>
+      <div class="btn-label" style="font-size:18px;margin-top:18px">Dış Kapıyı Aç</div>
+      <div style="color:var(--text-sec);font-size:13px;margin-top:6px">2 saniye röle darbesi</div>
+    </div>
+    <h3 class="section-title">Durum</h3>
+    <div class="card"><div class="metric-grid">
+      <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined">door_front</span> Röle</div><div class="metric-value" data-field="kapi-relaystate">—</div></div>
+      <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined">history</span> Son açılış</div><div class="metric-value" data-field="kapi-last">—</div></div>
+    </div></div>
+    <h3 class="section-title">Sistem Sağlığı</h3>
+    <div class="card"><div class="metric-grid" data-telemetry="kapi">
+      <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-purple)">wifi</span> Sinyal</div><div class="metric-value" data-t="rssi">—</div></div>
+      <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-green)">memory</span> Boş RAM</div><div class="metric-value" data-t="heap">—</div></div>
+      <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined">schedule</span> Uptime</div><div class="metric-value" data-t="uptime">—</div></div>
+      <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined">lan</span> IP</div><div class="metric-value" data-t="ip" style="font-size:14px">—</div></div>
+    </div></div>
+  </div>
 
-        function toggleTheme() {
-            hapticClick();
-            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', currentTheme);
-            localStorage.setItem('theme', currentTheme);
-            document.getElementById('theme-icon').innerText = currentTheme === 'dark' ? 'dark_mode' : 'light_mode';
-        }
+  <!-- ---------- KAMERA ---------- -->
+  <div id="page-kamera" class="page-section">
+    <div class="card">
+      <div class="card-header"><div class="card-title"><span class="material-symbols-outlined" style="color:var(--c-cyan)">videocam</span> Canlı Görüntü</div><span class="badge" data-badge="kamera">—</span></div>
+      <div class="cam-box" id="detail-cam"><div class="placeholder"><span class="material-symbols-outlined" style="font-size:44px">videocam_off</span><span>Yayın kapalı</span></div><img alt="kamera"></div>
+      <div class="cam-controls">
+        <button class="stream-btn" data-stream-toggle><span class="material-symbols-outlined">play_arrow</span> <span>Yayını Başlat</span></button>
+        <select data-res title="Çözünürlük">
+          <option value="qvga">240p</option><option value="hvga">320p</option>
+          <option value="vga" selected>480p</option><option value="svga">600p</option>
+        </select>
+        <select data-fps title="FPS">
+          <option value="2">2 fps</option><option value="3">3 fps</option>
+          <option value="5" selected>5 fps</option><option value="8">8 fps</option><option value="10">10 fps</option>
+        </select>
+        <label class="switch-row"><span class="material-symbols-outlined" style="color:var(--c-orange)">lightbulb</span> Işık
+          <span class="switch"><input type="checkbox" data-light><span class="slider"></span></span></label>
+      </div>
+      <div class="usage-wrap">
+        <div class="usage-row"><div class="u-top"><span>Bugün</span><span data-field="usage-today">—</span></div><div class="usage-bar" data-bar="today"><span></span></div></div>
+        <div class="usage-row"><div class="u-top"><span>Bu ay (HiveMQ 10 GB)</span><span data-field="usage-month">—</span></div><div class="usage-bar" data-bar="month"><span></span></div></div>
+      </div>
+    </div>
+    <h3 class="section-title">Sensör</h3>
+    <div class="card"><div class="metric-grid">
+      <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--warning)">sensors</span> Son hareket</div><div class="metric-value" data-field="kamera-motion" style="font-size:15px">—</div></div>
+      <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined">tune</span> Yayın</div><div class="metric-value" data-field="kamera-streamstate">kapalı</div></div>
+    </div></div>
+    <h3 class="section-title">Sistem Sağlığı</h3>
+    <div class="card"><div class="metric-grid" data-telemetry="kamera">
+      <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-purple)">wifi</span> Sinyal</div><div class="metric-value" data-t="rssi">—</div></div>
+      <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-green)">memory</span> Boş RAM</div><div class="metric-value" data-t="heap">—</div></div>
+      <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined">schedule</span> Uptime</div><div class="metric-value" data-t="uptime">—</div></div>
+      <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined">lan</span> IP</div><div class="metric-value" data-t="ip" style="font-size:14px">—</div></div>
+    </div></div>
+  </div>
 
-        // --- SES VE HAPTIC FEEDBACK ---
-        let isSoundEnabled = true;
-        let audioCtx;
+  <!-- ---------- SALON ---------- -->
+  <div id="page-salon" class="page-section">
+    <div class="card" style="align-items:center;padding:40px 20px">
+      <div style="font-size:52px;font-weight:300;color:var(--text-sec)" data-field="salon-temp">—</div>
+      <button class="icon-btn" data-ac-toggle style="margin-top:20px">
+        <span class="material-symbols-outlined" data-icon="salon-ac" style="font-size:46px">power_settings_new</span>
+      </button>
+      <div class="btn-label" style="font-size:18px;margin-top:16px" data-field="salon-label">Klimayı Aç</div>
+      <div style="display:flex;gap:8px;margin-top:14px;align-items:center">
+        <button class="btn-small" data-ac-temp="-1"><span class="material-symbols-outlined">remove</span></button>
+        <span style="font-weight:600;min-width:52px;text-align:center" data-field="salon-settemp">24°C</span>
+        <button class="btn-small" data-ac-temp="1"><span class="material-symbols-outlined">add</span></button>
+      </div>
+    </div>
+    <h3 class="section-title">Sistem Sağlığı</h3>
+    <div class="card"><div class="metric-grid" data-telemetry="salon">
+      <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-purple)">wifi</span> Sinyal</div><div class="metric-value" data-t="rssi">—</div></div>
+      <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-green)">memory</span> Boş RAM</div><div class="metric-value" data-t="heap">—</div></div>
+      <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined">schedule</span> Uptime</div><div class="metric-value" data-t="uptime">—</div></div>
+      <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined">lan</span> IP</div><div class="metric-value" data-t="ip" style="font-size:14px">—</div></div>
+    </div></div>
+  </div>
 
-        function toggleSound() {
-            isSoundEnabled = !isSoundEnabled;
-            const icon = document.getElementById('sound-icon');
-            icon.innerText = isSoundEnabled ? 'volume_up' : 'volume_off';
-            icon.style.color = isSoundEnabled ? 'var(--text-sec)' : 'var(--c-pink)';
-            if(isSoundEnabled) hapticClick();
-        }
+  <!-- ---------- TERMINAL ---------- -->
+  <div id="page-terminal" class="page-section">
+    <div class="log-filters">
+      <button class="chip active" data-filter="all">Tümü</button>
+      <button class="chip" data-filter="kapi">Kapı</button>
+      <button class="chip" data-filter="kamera">Kamera</button>
+      <button class="chip" data-filter="salon">Salon</button>
+      <button class="chip" data-filter="sys">Sistem</button>
+    </div>
+    <div id="log-box"></div>
+  </div>
+</div>
 
-        function initAudio() {
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-        }
+<div id="toasts"></div>
 
-        function hapticClick() {
-            if (!isSoundEnabled) return;
-            if (navigator.vibrate) navigator.vibrate(15);
-            initAudio();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.frequency.setValueAtTime(300, audioCtx.currentTime);
-            gain.gain.setValueAtTime(0.02, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.03);
-            osc.start(); osc.stop(audioCtx.currentTime + 0.03);
-        }
-
-        function hapticSuccess() {
-            if (!isSoundEnabled) return;
-            if (navigator.vibrate) navigator.vibrate([30, 40, 30]);
-            initAudio();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.frequency.setValueAtTime(600, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.1);
-            gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
-            osc.start(); osc.stop(audioCtx.currentTime + 0.1);
-        }
-
-        const pages = { 'dashboard': 'Genel Bakış', 'ic_kapi': 'İç Kapı', 'dis_kapi': 'Dış Kamera', 'salon': 'Salon', 'terminal': 'Sistem Terminali' };
-
-        function navTo(pageId, navElement) {
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            if(navElement) navElement.classList.add('active');
-            document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active'));
-            document.getElementById('page-' + pageId).classList.add('active');
-            document.getElementById('page-title').innerText = pages[pageId];
-        }
-
-        // --- VERCEL API HABERLEŞME MERKEZİ ---
-        async function sendCommand(device, cmd) {
-            try {
-                const response = await fetch('/api/control', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ pin: '1234', device: device, command: cmd })
-                });
-                const result = await response.json();
-                if (!response.ok) throw new Error(result.error || 'API Hatası');
-                addLog('system', 'SİSTEM', `Sunucu onayı: ${cmd} iletildi.`);
-            } catch (err) {
-                addLog('system', 'SİSTEM', `Bağlantı Hatası: ${err.message}`);
-            }
-        }
-
-        // --- BAŞLANGIÇ VERİLERİNİ ÇEKME ---
-        async function loadInitialState() {
-            try {
-                const res = await fetch('/api/status');
-                if(!res.ok) throw new Error("Durum API yanıt vermedi");
-                
-                const veritabanı = await res.json();
-                
-                // İç Kapı Zamanını Güncelle
-                if (veritabanı.ic_kapi) {
-                    const saat = new Date(veritabanı.ic_kapi.tarih).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
-                    document.getElementById('dash-ic-time').innerText = saat;
-                    document.getElementById('detail-door-time').innerText = `Bugün, ${saat}`;
-                    document.getElementById('detail-door-status').innerText = 'KİLİTLİ';
-                }
-                
-                // Klima Durumunu Senkronize Et
-                if (veritabanı.salon) {
-                    if (veritabanı.salon.komut === 'AC_ON_24' && !acState) toggleAC(true);
-                    else if (veritabanı.salon.komut === 'AC_OFF' && acState) toggleAC(true);
-                }
-                
-                // Dış Kamera Işığını Senkronize Et
-                if (veritabanı.dis_kapi) {
-                    if (veritabanı.dis_kapi.komut === 'LIGHT_ON' && !isLightOn) toggleCamLight(true, true);
-                    else if (veritabanı.dis_kapi.komut === 'LIGHT_OFF' && isLightOn) toggleCamLight(false, true);
-                }
-                
-            } catch (error) {
-                console.error("Veritabanı durum bilgisi alınamadı.", error);
-            } finally {
-                // Yüklenme iskeletlerini her durumda kaldır
-                document.querySelectorAll('.skeleton').forEach(el => el.classList.remove('skeleton'));
-                document.getElementById('dash-stream-icon').innerText = 'videocam_off';
-            }
-        }
-
-        window.addEventListener('DOMContentLoaded', loadInitialState);
-
-        // --- DONANIM KONTROLLERİ ---
-        function unlockDoor() {
-            hapticSuccess();
-            const dashBtn = document.getElementById('dash-btn-door'), dashIcon = document.getElementById('dash-icon-door');
-            const btn = document.getElementById('btn-door'), icon = document.getElementById('icon-door');
-            const statusDetail = document.getElementById('detail-door-status'), timeDetail = document.getElementById('detail-door-time'), dashTime = document.getElementById('dash-ic-time');
-
-            [icon, dashIcon].forEach(i => { i.innerText = 'lock_open'; i.style.color = 'var(--success)'; });
-            [btn, dashBtn].forEach(b => b.classList.add('active-state'));
-            statusDetail.innerText = 'AÇIK (BEKLENİYOR)'; statusDetail.style.color = 'var(--warning)';
-            
-            const simdi = new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
-            dashTime.innerText = simdi; timeDetail.innerText = `Bugün, ${simdi}`;
-            
-            addLog('ic_kapi', 'İÇ KAPI', 'Kapı kilidi açıldı (Anında).');
-            sendCommand('ic_kapi', 'OPEN_DOOR');
-            
-            setTimeout(() => {
-                [icon, dashIcon].forEach(i => { i.innerText = 'lock'; i.style.color = 'var(--text-sec)'; });
-                [btn, dashBtn].forEach(b => b.classList.remove('active-state'));
-                statusDetail.innerText = 'KİLİTLİ'; statusDetail.style.color = 'var(--success)';
-                addLog('ic_kapi', 'İÇ KAPI', 'Kapı tekrar kilitlendi.');
-            }, 2000);
-        }
-
-        let acState = false; 
-        function toggleAC(isSilent = false) {
-            if(!isSilent) hapticSuccess();
-            acState = !acState;
-            const dashBtn = document.getElementById('dash-btn-ac'), dashIcon = document.getElementById('dash-icon-ac'), dashLbl = document.getElementById('dash-lbl-ac'), dashStatus = document.getElementById('dash-ac-status');
-            const btn = document.getElementById('btn-ac'), icon = document.getElementById('icon-ac'), detailLbl = document.getElementById('detail-lbl-ac'), detailTemp = document.getElementById('detail-ac-temp');
-
-            if(acState) {
-                [btn, dashBtn].forEach(b => b.classList.add('active-state'));
-                [icon, dashIcon].forEach(i => i.style.color = 'var(--primary)');
-                [detailLbl, dashLbl].forEach(l => l.innerText = 'Klimayı Kapat');
-                dashStatus.innerHTML = '<span style="color:var(--c-blue); font-weight:bold;">AÇIK (24°C)</span>';
-                detailTemp.style.color = 'var(--c-blue)';
-                detailTemp.innerText = '24°C';
-                if(!isSilent) { addLog('salon', 'SALON', 'Klima Açıldı (IR: 24°C).'); sendCommand('salon', 'AC_ON_24'); }
-            } else {
-                [btn, dashBtn].forEach(b => b.classList.remove('active-state'));
-                [icon, dashIcon].forEach(i => i.style.color = 'var(--text-sec)');
-                [detailLbl, dashLbl].forEach(l => l.innerText = 'Klimayı Aç');
-                dashStatus.innerHTML = '<span style="color:var(--text-sec); font-weight:bold;">KAPALI</span>';
-                detailTemp.style.color = 'var(--text-sec)';
-                detailTemp.innerText = '--°C';
-                if(!isSilent) { addLog('salon', 'SALON', 'Klima Kapatıldı (IR).'); sendCommand('salon', 'AC_OFF'); }
-            }
-        }
-
-        let isLightOn = false;
-        function toggleCamLight(state, isSilent = false) {
-            if(!isSilent) hapticClick();
-            isLightOn = state;
-            document.getElementById('dash-light-sw').checked = isLightOn;
-            document.getElementById('detail-light-sw').checked = isLightOn;
-            if(!isSilent) {
-                addLog('dis_kapi', 'DIŞ KAMERA', isLightOn ? 'Projektör AÇILDI.' : 'Projektör Kapatıldı.');
-                sendCommand('dis_kapi', isLightOn ? 'LIGHT_ON' : 'LIGHT_OFF');
-            }
-        }
-
-        let isDashStreamPlaying = false;
-        function toggleDashStream() {
-            hapticClick();
-            isDashStreamPlaying = !isDashStreamPlaying;
-            const box = document.getElementById('dash-stream-box'), icon = document.getElementById('dash-stream-icon'), btnIcon = document.getElementById('dash-stream-btn-icon'), btnText = document.getElementById('dash-stream-btn-text');
-
-            if(isDashStreamPlaying) {
-                icon.style.display = 'none';
-                box.style.background = '#000 url("https://via.placeholder.com/400x200/111/333?text=CANLI+YAYIN") center/cover';
-                btnIcon.innerText = 'stop_circle'; btnIcon.style.color = 'var(--c-pink)';
-                btnText.innerText = 'Yayını Durdur'; btnText.style.color = 'var(--c-pink)';
-                addLog('dis_kapi', 'DIŞ KAMERA', 'Dashboard canlı yayını başlatıldı.');
-            } else {
-                icon.style.display = 'block';
-                box.style.background = '#202124';
-                btnIcon.innerText = 'play_arrow'; btnIcon.style.color = 'var(--primary)';
-                btnText.innerText = 'Yayını Başlat'; btnText.style.color = 'var(--primary)';
-                addLog('dis_kapi', 'DIŞ KAMERA', 'Dashboard canlı yayını durduruldu.');
-            }
-        }
-
-        function startDetailStream(overlayElem) {
-            hapticClick();
-            overlayElem.innerHTML = '<div class="spinner" style="display:block; margin:auto; border-top-color:#fff;"></div><div style="margin-top:16px; font-size:14px;">Bağlanıyor...</div>';
-            addLog('dis_kapi', 'DIŞ KAMERA', 'Tam ekran stream isteği atıldı.');
-            setTimeout(() => {
-                overlayElem.style.display = 'none';
-                document.getElementById('detail-cam-box').style.background = '#000 url("https://via.placeholder.com/800x450/111/333?text=CANLI+YAYIN") center/cover';
-                addLog('dis_kapi', 'DIŞ KAMERA', 'Stream aktif (IP: 192.168.x.x).');
-            }, 1000);
-        }
-
-        let currentFilter = 'all';
-        function addLog(deviceId, tag, message) {
-            const term = document.getElementById('log-box');
-            const timeStr = new Date().toLocaleTimeString();
-            const displayStyle = (currentFilter === 'all' || currentFilter === deviceId) ? 'block' : 'none';
-            
-            const logHTML = `<div class="log-line" data-device="${deviceId}" style="display: ${displayStyle};"><span class="log-time">${timeStr}</span><span class="log-tag ${deviceId}">[${tag}]</span><span>${message}</span></div>`;
-            term.insertAdjacentHTML('beforeend', logHTML);
-            term.scrollTop = term.scrollHeight;
-        }
-
-        function filterLogs(device, btnElem) {
-            currentFilter = device;
-            document.querySelectorAll('.filter-chip').forEach(el => el.classList.remove('active'));
-            btnElem.classList.add('active');
-            
-            document.querySelectorAll('.log-line').forEach(line => {
-                if(device === 'all' || line.getAttribute('data-device') === device) {
-                    line.style.display = 'block';
-                } else {
-                    line.style.display = 'none';
-                }
-            });
-            document.getElementById('log-box').scrollTop = document.getElementById('log-box').scrollHeight;
-        }
-    </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
+<script src="app.js"></script>
 </body>
 </html>

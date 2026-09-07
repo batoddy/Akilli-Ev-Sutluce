@@ -1,20 +1,13 @@
 {
-  "name": "Ev Kontrolü",
-  "short_name": "Ev",
+  "name": "Sütlüce Ev Kontrolü",
+  "short_name": "Sütlüce Ev",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#121212",
   "theme_color": "#1a73e8",
   "icons": [
-    {
-      "src": "https://via.placeholder.com/192/1a73e8/ffffff?text=EV",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "https://via.placeholder.com/512/1a73e8/ffffff?text=EV",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
   ]
 }

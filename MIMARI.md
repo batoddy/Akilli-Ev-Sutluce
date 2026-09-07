@@ -486,20 +486,20 @@ Adımlar:
 - [ ] **[sen]** Vercel env değişkenleri (`SETUP.md` Faz 4 tablosu) + redeploy
 - [ ] **[sen]** `/api/session` GET → 401, `/api/ingest` yanlış secret → 401 testi
 
-### Faz 5 — Arayüz
-- [ ] `index.html` / `styles.css` / `app.js` böl
-- [ ] `/login` ekranı → `/api/session`, cookie kontrolü
-- [ ] `mqtt.js` (CDN) WSS salt-okunur bağlantı + reconnect + bağlantı göstergesi
-- [ ] Cihaz sayfaları: kapi / kamera / salon
-- [ ] Retained `state` + `/api/history`'den ilk yükleme
-- [ ] Komutlar `/api/command`'e; ACK → toast/onay
-- [ ] Terminal: gerçek `ev/+/log`, cihaz filtresi, seviye renkleri, satır limiti
-- [ ] Telemetri kartlarını canlı doldur
-- [ ] Kamera: on-demand `<img>` akışı, **çözünürlük + fps seçici**, 180 sn sayaç
-- [ ] Dashboard: kamera altında **günlük + aylık kullanım barı** (usage)
-- [ ] "Son hareket" (event:motion + history)
-- [ ] Kırık `via.placeholder.com` → inline SVG; `manifest.json` ikon; `sw.js` ekle ya da SW kaldır
-- [ ] Simülasyon/placeholder kodu temizle
+### Faz 5 — Arayüz ✅ (tarayıcı testi bekliyor)
+- [x] `index.html` / `styles.css` / `app.js` bölündü (mevcut tasarım korundu)
+- [x] Login overlay → `/api/session` (POST giriş / GET kontrol / DELETE çıkış)
+- [x] `mqtt.js` 4.3.7 (cdnjs) WSS salt-okunur + reconnect + bağlantı pill'i
+- [x] Cihaz sayfaları: kapi / kamera / salon + terminal
+- [x] `/api/history` + retained MQTT `state`/`status`/`telemetry`'den ilk yükleme
+- [x] Komutlar `/api/command`; ACK → toast (cmd/ack aboneliği)
+- [x] Terminal: gerçek `ev/+/log`, cihaz filtresi, WARN/ERROR renkleri, 300 satır limiti
+- [x] Telemetri kartları canlı; nav'da online/offline nokta
+- [x] Kamera: on-demand `<img>` blob akışı, res+fps seçici, 60 sn keepalive, `/api/usage` raporu
+- [x] Dashboard + kamera: günlük + aylık kullanım barı (×2 tahmin, 10 GB'a göre)
+- [x] `via.placeholder.com` kaldırıldı; `icon.svg` + `manifest.json`; gerçek `sw.js` (network-first)
+- [x] eski simülasyon kodu tamamen silindi
+- [ ] **[sen]** Vercel env + redeploy sonrası tarayıcıda test; konsol/hata bana
 
 ### Faz 6 — Sağlamlaştırma
 - [ ] Gerçek kullanım ölçümü (HiveMQ / Vercel / Supabase)
