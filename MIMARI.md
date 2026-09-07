@@ -448,8 +448,8 @@ Adımlar:
 - [ ] **[sen]** HiveMQ 5 kullanıcı + ACL (bkz. `SETUP.md`)
 - [ ] **[sen]** Değerleri `SETUP.md` env tablosuna not et
 
-### Faz 2 — Firmware çekirdeği ✅ (derleme kontrolü bekliyor)
-- [x] PlatformIO 3 env + `ROLE_*` (`platformio.ini`)
+### Faz 2 — Firmware çekirdeği ✅ (3 env de derlendi)
+- [x] PlatformIO 3 env + `ROLE_*` + `build_src_filter` (her env kendi rolü)
 - [x] `Protocol.h` (topic makroları, rol→id)
 - [x] `NetworkManager`: LWT, exp-backoff, NTP, `setBufferSize`
 - [x] `Logger` (Serial + MQTT `ev/<dev>/log` + saniyede 5 rate-limit)
@@ -457,7 +457,7 @@ Adımlar:
 - [x] `Telemetry` (MQTT 60 sn retained + ingest 5 dk + 24 sa heartbeat)
 - [x] `IngestClient` (HTTPS POST, bloklar — seyrek çağrı)
 - [x] rol iskeletleri: `DoorRelay` (tam), `AcNode`/`CamNode` (ışık+PIR gerçek, geri kalan Faz 3)
-- [ ] **[sen]** `pio run -e kapi` / `-e salon` / `-e kamera` derleme kontrolü
+- [x] derleme: kapi ✅ salon ✅ kamera ✅
 - Not: PubSubClient publish daima QoS 0; `state`/`status`/`telemetry` retained yayınlanır.
 
 ### Faz 3 — Firmware roller
