@@ -173,6 +173,7 @@ async function loadHistory() {
     S.usage.month = j.usage_month || 0;
     DEVICES.forEach((d) => { renderDevice(d); renderTelemetry(d); });
     renderUsage();
+    seedTerminal(j);
   } catch (e) { console.error(e); addLog('sys', 'WARN', 'geçmiş yüklenemedi: ' + e.message); }
 }
 
@@ -289,19 +290,36 @@ function renderStreamBtn() {
 }
 
 // ============================ terminal ============================
-function addLog(dev, lvl, msg) {
+function addLog(dev, lvl, msg, when) {
   const box = $('#log-box'); if (!box) return;
   const line = document.createElement('div');
   line.className = 'log-line ' + (lvl || 'INFO');
   line.dataset.dev = dev;
+  const time = new Date(when || Date.now()).toLocaleTimeString('tr-TR');
   line.innerHTML =
-    `<span class="log-time">${new Date().toLocaleTimeString('tr-TR')}</span>` +
+    `<span class="log-time">${time}</span>` +
     `<span class="log-tag" style="color:${tagColor(dev)}">[${dev.toUpperCase()}]</span>` +
     `<span class="log-msg">${esc(msg)}</span>`;
   if (S.filter !== 'all' && S.filter !== dev) line.hidden = true;
   box.appendChild(line);
   while (box.children.length > MAX_LOG) box.removeChild(box.firstChild);
   box.scrollTop = box.scrollHeight;
+}
+
+function seedTerminal(j) {
+  const rows = [
+    ...(j.events || []).map((e) => ({
+      t: e.created_at, dev: e.device_id, lvl: 'INFO',
+      msg: 'olay · ' + JSON.stringify(e.payload || { type: e.type }),
+    })),
+    ...(j.commands || []).map((c) => ({
+      t: c.created_at, dev: c.device_id,
+      lvl: c.status === 'ack_error' ? 'ERROR' : 'INFO',
+      msg: `komut ${c.cmd} → ${c.status}${c.user_name ? ' (' + c.user_name + ')' : ''}`,
+    })),
+  ].sort((a, b) => new Date(a.t) - new Date(b.t)).slice(-80);
+  rows.forEach((r) => addLog(r.dev, r.lvl, r.msg, r.t));
+  addLog('sys', 'INFO', '——— canlı ———');
 }
 
 // ============================ UI wiring ============================

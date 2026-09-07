@@ -19,10 +19,15 @@ export default async function handler(req, res) {
     .order('created_at', { ascending: false }).limit(30);
   if (device) telQ = telQ.eq('device_id', device);
 
-  const [states, events, telemetry, uToday, uMonth] = await Promise.all([
+  let cmdQ = supabase.from('commands').select('*')
+    .order('created_at', { ascending: false }).limit(limit);
+  if (device) cmdQ = cmdQ.eq('device_id', device);
+
+  const [states, events, telemetry, commands, uToday, uMonth] = await Promise.all([
     supabase.from('device_state').select('*'),
     eventsQ,
     telQ,
+    cmdQ,
     supabase.from('usage_daily').select('bytes').gte('day', today),
     supabase.from('usage_daily').select('bytes').gte('day', monthStart),
   ]);
@@ -33,6 +38,7 @@ export default async function handler(req, res) {
     states: states.data || [],
     events: events.data || [],
     telemetry: telemetry.data || [],
+    commands: commands.data || [],
     usage_today: sum(uToday),
     usage_month: sum(uMonth),
   });
