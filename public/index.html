@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Ev Kontrolü</title>
     
-    <!-- PWA & Tema Meta Etiketleri -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1a73e8">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -14,7 +13,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
     <style>
-        /* VARSAYILAN / AYDINLIK TEMA */
         :root {
             --primary: #1a73e8; --primary-bg: #e8f0fe;
             --bg: #f8f9fa; --surface: #ffffff;
@@ -25,7 +23,6 @@
             --skel-bg: #e8eaed;
         }
 
-        /* KARANLIK TEMA */
         :root[data-theme="dark"] {
             --primary: #8ab4f8; --primary-bg: #1a233a;
             --bg: #121212; --surface: #1e1e1e;
@@ -44,10 +41,8 @@
             }
         }
         
-        /* 100dvh mobil tarayıcılardaki adres çubuğu sorununu çözer */
         body { margin: 0; font-family: 'Google Sans', Roboto, sans-serif; background: var(--bg); color: var(--text); display: flex; height: 100dvh; overflow: hidden; font-size: 15px; user-select: none; -webkit-tap-highlight-color: transparent; }
         
-        /* Yan Menü */
         .sidebar { width: 260px; background: var(--surface); border-right: 1px solid var(--border); padding: 24px 0; display: flex; flex-direction: column; z-index: 10; transition: background 0.3s, border 0.3s; flex-shrink: 0; }
         .logo { padding: 0 24px 24px; font-size: 22px; font-weight: 500; display: flex; align-items: center; gap: 12px; }
         .nav-section-title { font-size: 12px; font-weight: 700; color: var(--text-sec); letter-spacing: 1px; padding: 12px 24px 4px; text-transform: uppercase; }
@@ -55,12 +50,10 @@
         .nav-item:hover { background: var(--border); }
         .nav-item.active { background: var(--primary-bg); color: var(--primary); }
         
-        /* Ana İçerik */
         .main { flex: 1; padding: 40px; overflow-y: auto; display: flex; flex-direction: column; transition: background 0.3s; }
         .header { margin-bottom: 32px; display: flex; justify-content: space-between; align-items: center; }
         .header h1 { margin: 0; font-size: 28px; font-weight: 400; }
         
-        /* Üst Kontrol Butonları */
         .top-controls { display: flex; gap: 12px; align-items: center; }
         .btn-small { background: transparent; border: 1px solid var(--border); border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-sec); transition: 0.2s; }
         .btn-small:hover { background: var(--border); }
@@ -69,7 +62,6 @@
         .page-section.active { display: flex !important; }
         #page-dashboard.active { display: grid !important; }
         
-        /* Kartlar */
         .grid { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; align-items: start; }
         .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px; display: flex; flex-direction: column; box-shadow: 0 1px 2px rgba(0,0,0,0.1); transition: 0.3s; }
         
@@ -103,13 +95,11 @@
         .spinner { border: 3px solid transparent; border-top: 3px solid var(--primary); border-radius: 50%; width: 28px; height: 28px; animation: spin 0.8s linear infinite; display: none; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
-        /* İSKELET YÜKLEYİCİLER (SKELETON SCREENS) */
         .skeleton { position: relative; overflow: hidden; background-color: var(--skel-bg); border-radius: 8px; color: transparent !important; }
         .skeleton * { visibility: hidden; }
         .skeleton::after { content: ""; position: absolute; top: 0; right: 0; bottom: 0; left: 0; transform: translateX(-100%); background-image: linear-gradient(90deg, rgba(255, 255, 255, 0) 0, rgba(255, 255, 255, 0.2) 20%, rgba(255, 255, 255, 0.5) 60%, rgba(255, 255, 255, 0)); animation: shimmer 1.5s infinite; }
         @keyframes shimmer { 100% { transform: translateX(100%); } }
 
-        /* SİSTEM SAĞLIĞI & METRİK TASARIMI */
         .health-section-title { font-size: 16px; font-weight: 500; color: var(--text-sec); margin: 24px 0 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
         .health-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
         .health-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
@@ -122,7 +112,6 @@
 
         .data-row { display: flex; justify-content: space-between; font-size: 13px; color: var(--text-sec); border-top: 1px solid var(--border); padding-top: 16px; margin-top: 20px; font-weight: 500; }
         
-        /* TERMİNAL & FİLTRELER */
         #page-terminal { background: #121212; color: #e8eaed; border-radius: 16px; padding: 24px; border: 1px solid var(--border); font-family: 'Roboto Mono', monospace; font-size: 14px; height: calc(100vh - 180px); display: flex; flex-direction: column; }
         .log-filters { display: flex; gap: 12px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #333; overflow-x: auto; scrollbar-width: none; }
         .filter-chip { background: transparent; border: 1px solid #5f6368; color: #9aa0a6; padding: 8px 20px; border-radius: 20px; font-family: 'Google Sans', sans-serif; font-size: 14px; cursor: pointer; transition: 0.2s; white-space: nowrap; }
@@ -133,15 +122,14 @@
         .log-time { color: #9aa0a6; margin-right: 14px; font-size: 12px; }
         .log-tag { font-weight: 600; margin-right: 14px; }
 
-        /* MOBİL UYUMLULUK DÜZELTMELERİ (Bottom Nav & Taşmalar) */
         @media (max-width: 768px) {
-            body { flex-direction: column; height: 100dvh; } /* 100dvh ile alt bar sorunu çözümü */
+            body { flex-direction: column; height: 100dvh; }
             .sidebar { 
                 width: 100%; 
                 flex-direction: row; 
                 flex-wrap: nowrap; 
                 justify-content: space-between; 
-                padding: 8px 12px calc(8px + env(safe-area-inset-bottom)); /* iOS Ana Ekran Çubuğu Boşluğu */
+                padding: 8px 12px calc(8px + env(safe-area-inset-bottom)); 
                 order: 2; 
                 z-index: 100; 
                 border-top: 1px solid var(--border); 
@@ -150,10 +138,9 @@
             .logo, .nav-section-title { display: none; }
             .nav-item { flex-direction: column; gap: 4px; padding: 8px 0; margin: 0; font-size: 11px; flex: 1; text-align: center; border-radius: 8px; justify-content: center; }
             .nav-item .material-symbols-outlined { font-size: 24px; margin: 0; }
-            .main { order: 1; flex: 1; padding: 20px 16px; overflow-y: auto; } /* flex:1 ile kalan yüksekliği doldurur */
+            .main { order: 1; flex: 1; padding: 20px 16px; overflow-y: auto; }
             .header h1 { font-size: 24px; }
             
-            /* Metrik kutuları mobilde yan yana taşmasın diye düzenlendi */
             .metric-box { flex-direction: row; justify-content: space-between; align-items: center; padding: 12px; }
             .metric-value { padding-left: 0; font-size: 16px; text-align: right; }
             .metric-header { font-size: 12px; }
@@ -179,7 +166,6 @@
     <div class="main">
         <div class="header">
             <h1 id="page-title">Genel Bakış</h1>
-            <!-- Tema ve Ses Kontrolleri -->
             <div class="top-controls">
                 <button class="btn-small" onclick="toggleSound()" title="Sesi Aç/Kapat">
                     <span class="material-symbols-outlined" id="sound-icon">volume_up</span>
@@ -199,14 +185,13 @@
                 </div>
                 <div class="action-area">
                     <div class="btn-wrapper">
-                        <!-- Animasyon (Spinner) tamamen kaldırıldı -->
                         <button class="icon-btn" id="dash-btn-door" onclick="unlockDoor()">
                             <span class="material-symbols-outlined" id="dash-icon-door">lock</span>
                         </button>
                         <div style="font-size:14px; font-weight:500; margin-top:12px;">Kapıyı Aç</div>
                     </div>
                 </div>
-                <div class="data-row"><span>Son Komut:</span><span id="dash-ic-time" class="skeleton">14 dk önce</span></div>
+                <div class="data-row"><span>Son Komut:</span><span id="dash-ic-time" class="skeleton">...</span></div>
             </div>
 
             <div class="card">
@@ -232,7 +217,7 @@
                 
                 <div class="data-row" style="margin-top:16px;">
                     <span style="display:flex; align-items:center; gap:6px; color:var(--warning);"><span class="material-symbols-outlined" style="font-size:18px;">motion_sensor_active</span> Son Hareket</span>
-                    <span class="skeleton">7 Eyl 12:30</span>
+                    <span class="skeleton">...</span>
                 </div>
             </div>
 
@@ -243,13 +228,13 @@
                 </div>
                 <div class="action-area">
                     <div class="btn-wrapper">
-                        <button class="icon-btn active-state" id="dash-btn-ac" onclick="toggleAC()">
-                            <span class="material-symbols-outlined" id="dash-icon-ac" style="color:var(--primary);">power_settings_new</span>
+                        <button class="icon-btn" id="dash-btn-ac" onclick="toggleAC()">
+                            <span class="material-symbols-outlined" id="dash-icon-ac" style="color:var(--text-sec);">power_settings_new</span>
                         </button>
-                        <div style="font-size:14px; font-weight:500; margin-top:12px;" id="dash-lbl-ac">Klimayı Kapat</div>
+                        <div style="font-size:14px; font-weight:500; margin-top:12px;" id="dash-lbl-ac">Klimayı Aç</div>
                     </div>
                 </div>
-                <div class="data-row"><span>Durum:</span><span id="dash-ac-status" style="color:var(--c-blue); font-weight:bold;" class="skeleton">AÇIK (24°C)</span></div>
+                <div class="data-row"><span>Durum:</span><span id="dash-ac-status" style="color:var(--text-sec); font-weight:bold;" class="skeleton">BEKLENİYOR</span></div>
             </div>
         </div>
 
@@ -268,11 +253,11 @@
                     <div class="metric-grid">
                         <div class="metric-box">
                             <div class="metric-header"><span class="material-symbols-outlined" style="color:var(--text-sec); font-size:20px;">door_front</span> Kapı Durumu</div>
-                            <div class="metric-value skeleton" style="color:var(--success);" id="detail-door-status">KİLİTLİ</div>
+                            <div class="metric-value skeleton" style="color:var(--success);" id="detail-door-status">BEKLENİYOR</div>
                         </div>
                         <div class="metric-box">
                             <div class="metric-header"><span class="material-symbols-outlined" style="color:var(--text-sec); font-size:20px;">history</span> Son İşlem</div>
-                            <div class="metric-value skeleton" id="detail-door-time">Bugün, 14:32</div>
+                            <div class="metric-value skeleton" id="detail-door-time">...</div>
                         </div>
                     </div>
                 </div>
@@ -285,19 +270,19 @@
                     <div class="metric-grid">
                         <div class="metric-box">
                             <div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-green); font-size:20px;">memory</span> CPU</div>
-                            <div class="metric-value skeleton">%12</div>
+                            <div class="metric-value skeleton">--%</div>
                         </div>
                         <div class="metric-box">
                             <div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-green); font-size:20px;">save</span> RAM Boş</div>
-                            <div class="metric-value skeleton">112 KB</div>
+                            <div class="metric-value skeleton">-- KB</div>
                         </div>
                         <div class="metric-box">
                             <div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-orange); font-size:20px;">bolt</span> Tüketim</div>
-                            <div class="metric-value skeleton">~120 mA</div>
+                            <div class="metric-value skeleton">-- mA</div>
                         </div>
                         <div class="metric-box">
                             <div class="metric-header"><span class="material-symbols-outlined" style="color:var(--text-sec); font-size:20px;">schedule</span> Uptime</div>
-                            <div class="metric-value skeleton">4g 12s</div>
+                            <div class="metric-value skeleton">--</div>
                         </div>
                     </div>
                 </div>
@@ -306,15 +291,15 @@
                     <div class="metric-grid">
                         <div class="metric-box">
                             <div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-pink); font-size:20px;">network_ping</span> Ping</div>
-                            <div class="metric-value skeleton">24 ms</div>
+                            <div class="metric-value skeleton">-- ms</div>
                         </div>
                         <div class="metric-box">
                             <div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-purple); font-size:20px;">wifi</span> Sinyal</div>
-                            <div class="metric-value skeleton">-58 dBm</div>
+                            <div class="metric-value skeleton">-- dBm</div>
                         </div>
                         <div class="metric-box" style="grid-column: 1 / -1;">
                             <div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-blue); font-size:20px;">swap_vert</span> Veri Transferi</div>
-                            <div class="metric-value skeleton">1.2 MB / 456 KB</div>
+                            <div class="metric-value skeleton">--</div>
                         </div>
                     </div>
                 </div>
@@ -345,7 +330,7 @@
                     <div class="metric-grid" style="grid-template-columns: 1fr;">
                         <div class="metric-box">
                             <div class="metric-header"><span class="material-symbols-outlined" style="color:var(--warning); font-size:20px;">motion_sensor_active</span> Son Hareket Algılandı</div>
-                            <div class="metric-value skeleton" style="color:var(--warning);">7 Eyl, 12:30</div>
+                            <div class="metric-value skeleton" style="color:var(--warning);">...</div>
                         </div>
                     </div>
                 </div>
@@ -356,18 +341,18 @@
                 <div class="health-card">
                     <h4>Donanım Durumu</h4>
                     <div class="metric-grid">
-                        <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-green); font-size:20px;">memory</span> CPU</div><div class="metric-value skeleton">%45</div></div>
-                        <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-green); font-size:20px;">save</span> RAM Boş</div><div class="metric-value skeleton">1.2 MB</div></div>
-                        <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-orange); font-size:20px;">bolt</span> Tüketim</div><div class="metric-value skeleton">~350 mA</div></div>
-                        <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--text-sec); font-size:20px;">schedule</span> Uptime</div><div class="metric-value skeleton">1g 8s</div></div>
+                        <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-green); font-size:20px;">memory</span> CPU</div><div class="metric-value skeleton">--%</div></div>
+                        <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-green); font-size:20px;">save</span> RAM Boş</div><div class="metric-value skeleton">-- MB</div></div>
+                        <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-orange); font-size:20px;">bolt</span> Tüketim</div><div class="metric-value skeleton">-- mA</div></div>
+                        <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--text-sec); font-size:20px;">schedule</span> Uptime</div><div class="metric-value skeleton">--</div></div>
                     </div>
                 </div>
                 <div class="health-card">
                     <h4>Ağ & Bağlantı</h4>
                     <div class="metric-grid">
-                        <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-pink); font-size:20px;">network_ping</span> Ping</div><div class="metric-value skeleton">45 ms</div></div>
-                        <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-purple); font-size:20px;">wifi</span> Sinyal</div><div class="metric-value skeleton">-72 dBm</div></div>
-                        <div class="metric-box" style="grid-column: 1 / -1;"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-blue); font-size:20px;">swap_vert</span> Veri Transferi</div><div class="metric-value skeleton">18.4 MB / 1.1 MB</div></div>
+                        <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-pink); font-size:20px;">network_ping</span> Ping</div><div class="metric-value skeleton">-- ms</div></div>
+                        <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-purple); font-size:20px;">wifi</span> Sinyal</div><div class="metric-value skeleton">-- dBm</div></div>
+                        <div class="metric-box" style="grid-column: 1 / -1;"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-blue); font-size:20px;">swap_vert</span> Veri Transferi</div><div class="metric-value skeleton">--</div></div>
                     </div>
                 </div>
             </div>
@@ -376,11 +361,11 @@
         <!-- SALON DETAY -->
         <div id="page-salon" class="page-section">
             <div class="card" style="align-items: center; padding: 40px 20px;">
-                <div style="font-size: 56px; font-weight: 300; margin-bottom: 32px; color:var(--c-blue);" id="detail-ac-temp" class="skeleton">24°C</div>
-                <button class="icon-btn active-state" id="btn-ac" onclick="toggleAC()" style="width:100px; height:100px;">
-                    <span class="material-symbols-outlined" id="icon-ac" style="font-size: 48px; color:var(--primary);">power_settings_new</span>
+                <div style="font-size: 56px; font-weight: 300; margin-bottom: 32px; color:var(--text-sec);" id="detail-ac-temp" class="skeleton">--°C</div>
+                <button class="icon-btn" id="btn-ac" onclick="toggleAC()">
+                    <span class="material-symbols-outlined" id="icon-ac" style="font-size: 48px; color:var(--text-sec);">power_settings_new</span>
                 </button>
-                <div style="font-weight: 500; font-size: 18px; margin-top: 20px;" id="detail-lbl-ac">Klimayı Kapat</div>
+                <div style="font-weight: 500; font-size: 18px; margin-top: 20px;" id="detail-lbl-ac">Klimayı Aç</div>
             </div>
 
             <h3 class="health-section-title">Ortam Sensörleri</h3>
@@ -389,11 +374,11 @@
                     <div class="metric-grid">
                         <div class="metric-box">
                             <div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-orange); font-size:20px;">thermostat</span> Sıcaklık</div>
-                            <div class="metric-value skeleton">26.2 °C</div>
+                            <div class="metric-value skeleton">-- °C</div>
                         </div>
                         <div class="metric-box">
                             <div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-cyan); font-size:20px;">water_drop</span> Nem</div>
-                            <div class="metric-value skeleton">%45</div>
+                            <div class="metric-value skeleton">-- %</div>
                         </div>
                     </div>
                 </div>
@@ -404,18 +389,18 @@
                 <div class="health-card">
                     <h4>Donanım Durumu</h4>
                     <div class="metric-grid">
-                        <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-green); font-size:20px;">memory</span> CPU</div><div class="metric-value skeleton">%8</div></div>
-                        <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-green); font-size:20px;">save</span> RAM Boş</div><div class="metric-value skeleton">145 KB</div></div>
-                        <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-orange); font-size:20px;">bolt</span> Tüketim</div><div class="metric-value skeleton">~80 mA</div></div>
-                        <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--text-sec); font-size:20px;">schedule</span> Uptime</div><div class="metric-value skeleton">12g 4s</div></div>
+                        <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-green); font-size:20px;">memory</span> CPU</div><div class="metric-value skeleton">--%</div></div>
+                        <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-green); font-size:20px;">save</span> RAM Boş</div><div class="metric-value skeleton">-- KB</div></div>
+                        <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-orange); font-size:20px;">bolt</span> Tüketim</div><div class="metric-value skeleton">-- mA</div></div>
+                        <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--text-sec); font-size:20px;">schedule</span> Uptime</div><div class="metric-value skeleton">--</div></div>
                     </div>
                 </div>
                 <div class="health-card">
                     <h4>Ağ & Bağlantı</h4>
                     <div class="metric-grid">
-                        <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-pink); font-size:20px;">network_ping</span> Ping</div><div class="metric-value skeleton">18 ms</div></div>
-                        <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-purple); font-size:20px;">wifi</span> Sinyal</div><div class="metric-value skeleton">-42 dBm</div></div>
-                        <div class="metric-box" style="grid-column: 1 / -1;"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-blue); font-size:20px;">swap_vert</span> Veri Transferi</div><div class="metric-value skeleton">420 KB / 12 KB</div></div>
+                        <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-pink); font-size:20px;">network_ping</span> Ping</div><div class="metric-value skeleton">-- ms</div></div>
+                        <div class="metric-box"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-purple); font-size:20px;">wifi</span> Sinyal</div><div class="metric-value skeleton">-- dBm</div></div>
+                        <div class="metric-box" style="grid-column: 1 / -1;"><div class="metric-header"><span class="material-symbols-outlined" style="color:var(--c-blue); font-size:20px;">swap_vert</span> Veri Transferi</div><div class="metric-value skeleton">--</div></div>
                     </div>
                 </div>
             </div>
@@ -431,7 +416,7 @@
                 <button class="filter-chip" onclick="filterLogs('salon', this); hapticClick();">Salon</button>
             </div>
             <div id="log-box">
-                <div class="log-line" data-device="system"><span class="log-time">16:53:45</span><span class="log-tag system">[SİSTEM]</span><span>Terminale bağlanıldı. Canlı loglar akıyor...</span></div>
+                <div class="log-line" data-device="system"><span class="log-time">Şimdi</span><span class="log-tag system">[SİSTEM]</span><span>Terminale bağlanıldı. Canlı loglar bekleniyor...</span></div>
             </div>
         </div>
     </div>
@@ -525,10 +510,12 @@
             }
         }
 
-        // --- BAŞLANGIÇ VERİLERİNİ ÇEKME (YENİ EKLENDİ) ---
+        // --- BAŞLANGIÇ VERİLERİNİ ÇEKME ---
         async function loadInitialState() {
             try {
                 const res = await fetch('/api/status');
+                if(!res.ok) throw new Error("Durum API yanıt vermedi");
+                
                 const veritabanı = await res.json();
                 
                 // İç Kapı Zamanını Güncelle
@@ -536,6 +523,7 @@
                     const saat = new Date(veritabanı.ic_kapi.tarih).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
                     document.getElementById('dash-ic-time').innerText = saat;
                     document.getElementById('detail-door-time').innerText = `Bugün, ${saat}`;
+                    document.getElementById('detail-door-status').innerText = 'KİLİTLİ';
                 }
                 
                 // Klima Durumunu Senkronize Et
@@ -553,13 +541,12 @@
             } catch (error) {
                 console.error("Veritabanı durum bilgisi alınamadı.", error);
             } finally {
-                // İskeletleri kaldır (Veri gelsin veya gelmesin sayfa açılsın)
+                // Yüklenme iskeletlerini her durumda kaldır
                 document.querySelectorAll('.skeleton').forEach(el => el.classList.remove('skeleton'));
                 document.getElementById('dash-stream-icon').innerText = 'videocam_off';
             }
         }
 
-        // Sayfa açıldığında verileri yükle
         window.addEventListener('DOMContentLoaded', loadInitialState);
 
         // --- DONANIM KONTROLLERİ ---
@@ -587,7 +574,6 @@
             }, 2000);
         }
 
-        // isSilent: Sayfa ilk açılışında veritabanı okunduğunda API'ye tekrar komut göndermeyi engeller
         let acState = false; 
         function toggleAC(isSilent = false) {
             if(!isSilent) hapticSuccess();
@@ -601,6 +587,7 @@
                 [detailLbl, dashLbl].forEach(l => l.innerText = 'Klimayı Kapat');
                 dashStatus.innerHTML = '<span style="color:var(--c-blue); font-weight:bold;">AÇIK (24°C)</span>';
                 detailTemp.style.color = 'var(--c-blue)';
+                detailTemp.innerText = '24°C';
                 if(!isSilent) { addLog('salon', 'SALON', 'Klima Açıldı (IR: 24°C).'); sendCommand('salon', 'AC_ON_24'); }
             } else {
                 [btn, dashBtn].forEach(b => b.classList.remove('active-state'));
@@ -608,6 +595,7 @@
                 [detailLbl, dashLbl].forEach(l => l.innerText = 'Klimayı Aç');
                 dashStatus.innerHTML = '<span style="color:var(--text-sec); font-weight:bold;">KAPALI</span>';
                 detailTemp.style.color = 'var(--text-sec)';
+                detailTemp.innerText = '--°C';
                 if(!isSilent) { addLog('salon', 'SALON', 'Klima Kapatıldı (IR).'); sendCommand('salon', 'AC_OFF'); }
             }
         }

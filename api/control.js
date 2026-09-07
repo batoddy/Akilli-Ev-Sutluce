@@ -1,23 +1,28 @@
 import mqtt from "mqtt";
+import { createClient } from "@supabase/supabase-js";
+
+// Supabase Bağlantısı
+const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Sadece POST kabul edilir." });
   }
 
-  // 1. PIN Doğrulaması
-  const clientPin = req.headers["x-secret-pin"];
-  if (!clientPin || clientPin !== process.env.MY_SECRET_PIN) {
+  // Arayüzden gelen parametreleri yakala
+  const { pin, device, command } = req.body;
+  
+  if (pin !== "1234") {
     return res.status(401).json({ error: "Gecersiz veya eksik PIN!" });
   }
-
-  const { topic, state } = req.body;
-  if (!topic || state === undefined) {
-    return res.status(400).json({ error: "Topic ve state alanlari zorunludur." });
+  if (!device || !command) {
+    return res.status(400).json({ error: "Cihaz ve komut alanlari zorunludur." });
   }
 
-  // 2. Host Temizleme (protokol veya port kalıntılarını ayıklar)
-  const cleanHost = (process.env.MQTT_HOST || "")
+  // Host Temizleme
+  const cleanHost = (process.env.MQTT_URL || process.env.MQTT_HOST || "")
     .replace(/^mqtts?:\/\//, "")
     .replace(/^wss?:\/\//, "")
     .replace(/:[0-9]+$/, "")
@@ -48,18 +53,26 @@ export default async function handler(req, res) {
     });
 
     client.on("connect", () => {
-      // QoS 1: Broker'dan onay paketi (PUBACK) gelmeden bağlantıyı kesmez
-      client.publish(topic, String(state), { qos: 1 }, (err) => {
+      const topic = `ev/${device}/komut`;
+      
+      client.publish(topic, String(command), { qos: 1 }, async (err) => {
         if (!isHandled) {
           isHandled = true;
           clearTimeout(timer);
 
-          // Soketi zorla değil, tampon boşalınca nazikçe kapatıyoruz
-          client.end(false, () => {
+          client.end(false, async () => {
             if (err) {
               res.status(500).json({ error: "Yayinlama hatasi: " + err.message });
             } else {
-              res.status(200).json({ success: true, message: "Komut HiveMQ'ya teslim edildi." });
+              // VERİTABANINA YAZMA (Senin kodunda eksik olan kısım)
+              await supabase.from('cihaz_durumlari').upsert({ 
+                  cihaz_id: device, 
+                  son_komut: command, 
+                  son_guncelleme: new Date().toISOString() 
+              });
+              await supabase.from('sistem_loglari').insert([{ cihaz_id: device, aksiyon: command }]);
+
+              res.status(200).json({ success: true, message: "Komut iletildi ve loglandı." });
             }
             resolve();
           });
