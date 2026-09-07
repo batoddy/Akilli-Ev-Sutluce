@@ -1,8 +1,12 @@
 {
-  "name": "sutluce-ev-app",
+  "name": "ev-kontrol-sistemi",
   "version": "1.0.0",
-  "type": "module",
+  "description": "Akıllı Ev Kontrol Sistemi PWA ve Sunucu API",
+  "main": "index.html",
   "dependencies": {
-    "mqtt": "^5.3.5"
-  }
+    "@supabase/supabase-js": "^2.45.0",
+    "mqtt": "^5.10.0"
+  },
+  "author": "Batuhan Odçıkın",
+  "license": "MIT"
 }
