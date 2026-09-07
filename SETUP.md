@@ -34,26 +34,21 @@ VS Code eklentisi (SQLTools vb.) çoklu komutu reddeder — "cannot insert multi
   - `anon` public → `SUPABASE_ANON_KEY`
 
 ### 4. HiveMQ kullanıcıları
-HiveMQ Cloud → cluster → **Access Management → Credentials**. 5 kimlik oluştur.
-Her biri için güçlü, farklı parola (parola yöneticisi kullan). Mümkünse **Permissions**
-(topic izinleri) tablodaki gibi kısıtla.
+HiveMQ Cloud → cluster → **Access Management → Credentials**. Free tier'da sadece **Permission
+Type** (yön) seçilebilir, topic bazlı ACL yok — sorun değil, `web-sub`'ın publish edememesi
+asıl korumamız. 5 kimlik, her birine **farklı güçlü parola** (min 8):
 
-| Username | Permission — Publish | Permission — Subscribe |
-|---|---|---|
-| `esp-kapi`   | `ev/kapi/#`   | `ev/kapi/cmd`   |
-| `esp-kamera` | `ev/kamera/#` | `ev/kamera/cmd` |
-| `esp-salon`  | `ev/salon/#`  | `ev/salon/cmd`  |
-| `srv-pub`    | `ev/+/cmd`    | *(yok)* |
-| `web-sub`    | *(yok)*       | `ev/#` |
+| Username | Permission Type |
+|---|---|
+| `esp-kapi`   | Publish and Subscribe |
+| `esp-kamera` | Publish and Subscribe |
+| `esp-salon`  | Publish and Subscribe |
+| `srv-pub`    | **Publish Only** |
+| `web-sub`    | **Subscribe Only** |
 
-- [ ] 5 kimlik oluşturuldu
-- [ ] Permission (ACL) ayarı yapılabildi mi?  ☐ Evet  ☐ Hayır (panelde böyle bir seçenek yok) → **bana söyle**
+- [ ] 5 kimlik oluşturuldu, parolalar not edildi
 - [ ] Eski `batoddy` kimliğini **sil**
-- [ ] Cluster **hostname**'ini not et (`xxxx.s1.eu.hivemq.cloud`)
-- [ ] WebSocket portunu kontrol et (genelde **8884** TLS) → `HIVEMQ_WSS_PORT`
-
-### 5. HiveMQ hostname + portlar
-- [ ] Overview sayfasından: host, MQTT port (8883), WebSocket port (8884)
+- [ ] Overview sayfasından **hostname** (`xxxx.s1.eu.hivemq.cloud`) ve WebSocket portu (8884) not et
 
 ---
 

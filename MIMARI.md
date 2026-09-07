@@ -306,14 +306,16 @@ Günlük ~1.000 satır × ~200 B ≈ 200 KB/gün → 90 günde ~18 MB. 500 MB li
 - `mqtt` paketi sadece `/api/command` + `/api/ingest` için; client modül kapsamında cache'lenir.
 
 ### 8.1 HiveMQ kullanıcıları
-| Kullanıcı | Kim | Yetki |
-|---|---|---|
-| `esp-kapi` / `esp-kamera` / `esp-salon` | ESP'ler | publish `ev/<self>/#`, subscribe `ev/<self>/cmd` |
-| `srv-pub` | Vercel `/api/command`,`/api/ingest` | publish `ev/+/cmd` |
-| `web-sub` | Tarayıcı (salt-okunur) | subscribe `ev/#` — publish YOK |
+Free tier'da topic-bazlı ACL YOK, sadece yön seçilebiliyor:
 
-*(HiveMQ Cloud free ACL sınırlıysa tek kullanıcıyla başlanır; komut yolu yine sunucudan geçtiği
-için tarayıcı kimliği düşük riskli kalır.)*
+| Kullanıcı | Kim | Permission Type |
+|---|---|---|
+| `esp-kapi` / `esp-kamera` / `esp-salon` | ESP'ler | Publish and Subscribe |
+| `srv-pub` | Vercel `/api/command` (+ ingest gerekmez) | **Publish Only** |
+| `web-sub` | Tarayıcı (salt-okunur) | **Subscribe Only** |
+
+Güvenlik: `web-sub` publish edemez → sızsa bile komut/kapı-açma yok. Komutlar hep
+`/api/command` (cookie) → `srv-pub`. ESP'ler firmware'de yalnız kendi `cmd` topic'ine abone olur.
 
 ### 8.2 Auth akışı (kullanıcı adı + şifre)
 1. `/login` sayfası → kullanıcı adı + şifre → `POST /api/session`.
