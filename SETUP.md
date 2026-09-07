@@ -12,10 +12,12 @@ Toplanan değerleri en alttaki tabloya yaz — Faz 4'te Vercel'e girilecek.
 
 ## Faz 1 — Supabase + HiveMQ
 
-### 1. Supabase şema
-- [ ] Supabase → proje → **SQL Editor** → New query
-- [ ] `app/db/schema.sql` içeriğini yapıştır → **Run**
-- [ ] Hata yoksa: sol menü **Table Editor**'de `devices, events, commands, logs, telemetry, usage, users, device_state` görünür; `devices` tablosunda 3 satır (`kapi, kamera, salon`) olmalı.
+### 1. Supabase şema — 3 dosya, SIRAYLA (SQL Editor → yapıştır → Run)
+- [ ] `app/db/01_schema.sql`  → tablolar + RLS (tek seferde çalışır)
+- [ ] `app/db/02_functions.sql` → fonksiyonlar. Hepsini birden dene; "cannot insert multiple
+      commands" hatası gelirse dosyadaki **░░ BLOK 1..5** bloklarını tek tek seç → Run.
+- [ ] `app/db/03_seed.sql`  → cihazlar (kapi/kamera/salon)
+- [ ] Kontrol: Table Editor'de 8 tablo; `select id,name from devices;` → 3 satır.
 
 ### 2. İlk admin kullanıcı
 - [ ] SQL Editor'de (kendi değerlerinle):

@@ -18,7 +18,7 @@ Tüm servisler **free tier** — veriye cimri değil ama savurgan da değiliz.
 | # | Konu | Karar |
 |---|---|---|
 | 1 | Uzaktan erişim | ESP32 dışında **7/24 açık cihaz yok**. Kamera akışı **MQTT üzerinden JPEG kare**. Varsayılan **VGA 640×480 (~480p) @ 5 fps**; çözünürlük ve fps **arayüzden canlı değiştirilebilir** (240p–768p, 2–10 fps). 180 sn hareketsizlikte otomatik dur. Opsiyonel bonus: DuckDNS + modem port yönlendirme (ISS gerçek IPv4 veriyorsa). İleride yardımcı cihaz eklenince Cloudflare Tunnel / Tailscale. |
-| 2 | Kamera kullanım takibi | Dashboard'da kameranın altında **günlük + aylık kullanım barı**. Tarayıcı aldığı kare byte'larını sayar → `/api/usage` → `usage` tablosu. Bar, tahmini toplam trafiği (kayıtlı × ~2) HiveMQ 10 GB/ay limitine göre gösterir. |
+| 2 | Kamera kullanım takibi | Dashboard'da kameranın altında **günlük + aylık kullanım barı**. Tarayıcı aldığı kare byte'larını sayar → `/api/usage` → `usage_daily` tablosu. Bar, tahmini toplam trafiği (kayıtlı × ~2) HiveMQ 10 GB/ay limitine göre gösterir. |
 | 3 | ESP → veritabanı yazımı | **Vercel `/api/ingest` aracısı**. Supabase `service_role` sadece sunucuda; ESP `INGEST_SECRET` ile POST atar. |
 | 4 | Telemetri | Canlı gösterge: 60 sn MQTT (DB'ye yazılmaz). Geçmiş/grafik: 5 dk `/api/ingest` → `telemetry` tablosu. Retention 30 gün. |
 | 5 | Arayüz yapısı | Düz statik dosyalara böl (`index.html` + `styles.css` + `app.js` + CDN kütüphaneleri). **Framework yok, build yok, npm/npx kurulumu yok.** |
@@ -175,7 +175,7 @@ tablosundan takip et (yüksek ayarda ay çabuk biter).
 ### 6.2 Kullanım takibi (Dashboard barı — Karar #2)
 
 - Tarayıcı akış sırasında aldığı her kare Blob'unun byte'ını toplar.
-- Her 30 sn'de bir ve akış bitince `/api/usage` POST `{bytes}` → `usage` tablosuna
+- Her 30 sn'de bir ve akış bitince `/api/usage` POST `{bytes}` → `usage_daily` tablosuna
   `(device_id, day)` bazında **artımlı** yazılır (`on conflict do update set bytes = bytes + excluded`).
 - Dashboard `/api/history`'den `usage_today` + `usage_month` alır.
 - İki bar: **Bugün** (referans ~0.3 GB/gün) ve **Bu ay** (`kayıtlı × 2` ≈ tahmini toplam trafik,
@@ -239,7 +239,7 @@ create table telemetry (
 );
 create index on telemetry (device_id, created_at desc);
 
-create table usage (
+create table usage_daily (
   device_id text not null,
   day date not null,
   bytes bigint not null default 0,
@@ -255,7 +255,7 @@ create table users (
   last_login timestamptz
 );
 -- + fonksiyonlar: app_login, app_create_user, app_set_user_disabled, cleanup_old_data
--- Tam ve güncel şema: app/db/schema.sql
+-- Tam ve güncel şema: app/db/*.sql
 ```
 
 ### 7.1 RLS
@@ -273,10 +273,10 @@ hiçbir zaman API yanıtında dönmez.
 | WARN/ERROR log + günde 1 heartbeat | evet | `logs` |
 | Telemetri (canlı) | evet 60 sn | **hayır** |
 | Telemetri (geçmiş) | — | `telemetry` 5 dk |
-| Kamera kullanımı | — | `usage` (gün bazında artımlı) |
+| Kamera kullanımı | — | `usage_daily` (gün bazında artımlı) |
 
 ### 7.3 Retention (`/api/cron/cleanup`, Vercel Cron, günde 1 — `0 4 * * *`)
-`events` > 90g · `commands` > 60g · `logs` > 30g · `telemetry` > 30g · `usage` > 400g → sil.
+`events` > 90g · `commands` > 60g · `logs` > 30g · `telemetry` > 30g · `usage_daily` > 400g → sil.
 
 ### 7.4 Boyut
 Günlük ~1.000 satır × ~200 B ≈ 200 KB/gün → 90 günde ~18 MB. 500 MB limitin çok altında.
@@ -292,7 +292,7 @@ Günlük ~1.000 satır × ~200 B ≈ 200 KB/gün → 90 günde ~18 MB. 500 MB li
 | `/api/command` | POST | Cookie doğrula → `ev/<dev>/cmd`'e publish + `commands` satırı (`user_name`). HiveMQ **publish** kimliği sunucuda. |
 | `/api/ingest` | POST | ESP'den `{secret,kind,device,data,ts}` → Supabase. `secret != INGEST_SECRET` → 401. |
 | `/api/history` | GET | Cookie doğrula → `?device=&limit=` → `events` + `device_state` + son `telemetry` + `usage_today`/`usage_month`. |
-| `/api/usage` | POST | Cookie doğrula → `{bytes}` → `usage` artımlı upsert. |
+| `/api/usage` | POST | Cookie doğrula → `{bytes}` → `usage_daily` artımlı upsert. |
 | `/api/admin/users` | GET/POST/PATCH | Cookie + `is_admin` → kullanıcı listele / ekle (şifre hash'le) / disable. |
 | `/api/cron/cleanup` | GET (Cron) | §7.3. `CRON_SECRET` korumalı. |
 
@@ -327,7 +327,7 @@ için tarayıcı kimliği düşük riskli kalır.)*
 7. İptal: `app_set_user_disabled(username, true)`. Parola sıfırlama: admin `app_create_user` ile
    aynı username'e yeni parola yazar (self-service yok — basit).
 
-> Şema + fonksiyonlar: `app/db/schema.sql`. Panel adımları: `SETUP.md`.
+> Şema + fonksiyonlar: `app/db/*.sql`. Panel adımları: `SETUP.md`.
 
 ---
 
@@ -442,8 +442,8 @@ Adımlar:
 
 ### Faz 1 — Sözleşmeler
 - [x] MQTT + payload şemasını dondur (bu doküman)
-- [x] `app/db/schema.sql` hazır (tablolar + RLS + fonksiyonlar + seed)
-- [ ] **[sen]** Supabase SQL Editor'de `schema.sql` çalıştır
+- [x] `app/db/*.sql` hazır (tablolar + RLS + fonksiyonlar + seed)
+- [ ] **[sen]** Supabase SQL Editor'de `app/db/01_schema.sql` → `02_functions.sql` → `03_seed.sql` (sırayla)
 - [ ] **[sen]** `select app_create_user('<kul>','<parola>', true);` — ilk admin
 - [ ] **[sen]** HiveMQ 5 kullanıcı + ACL (bkz. `SETUP.md`)
 - [ ] **[sen]** Değerleri `SETUP.md` env tablosuna not et
