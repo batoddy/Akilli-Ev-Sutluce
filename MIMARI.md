@@ -248,12 +248,14 @@ create table usage (
 
 create table users (
   username text primary key,
-  password_hash text not null,      -- scrypt (Node crypto), tuz dahil
+  password_hash text not null,      -- bcrypt (pgcrypto crypt/gen_salt)
   is_admin boolean default false,
   disabled boolean default false,
   created_at timestamptz not null default now(),
   last_login timestamptz
 );
+-- + fonksiyonlar: app_login, app_create_user, app_set_user_disabled, cleanup_old_data
+-- Tam ve güncel şema: app/db/schema.sql
 ```
 
 ### 7.1 RLS
@@ -295,8 +297,8 @@ Günlük ~1.000 satır × ~200 B ≈ 200 KB/gün → 90 günde ~18 MB. 500 MB li
 | `/api/cron/cleanup` | GET (Cron) | §7.3. `CRON_SECRET` korumalı. |
 
 - Eski `/api/control.js` → `/api/command`. Eski `/api/status.js` → sil.
-- İlk admin: `scripts/adduser.mjs` (lokal Node script; kullanıcı adı + şifre sorar, scrypt hash'ler,
-  `users` tablosuna `is_admin=true` yazar). Sonraki kullanıcıları admin arayüzden veya scriptle ekle.
+- İlk admin: Supabase SQL Editor'de `select app_create_user('kul','parola', true);` (lokal Node
+  gerekmez). Sonraki kullanıcılar `/api/admin/users` (admin cookie) üzerinden.
 - Env: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `INGEST_SECRET`, `CRON_SECRET`, `SESSION_SECRET`,
   `HIVEMQ_HOST`, `HIVEMQ_PUB_USER`, `HIVEMQ_PUB_PASS` (sunucu publish),
   `HIVEMQ_SUB_USER`, `HIVEMQ_SUB_PASS` (salt-okunur, tarayıcıya verilir).
@@ -314,12 +316,18 @@ için tarayıcı kimliği düşük riskli kalır.)*
 
 ### 8.2 Auth akışı (kullanıcı adı + şifre)
 1. `/login` sayfası → kullanıcı adı + şifre → `POST /api/session`.
-2. Sunucu `users`'tan çeker, `crypto.scrypt` ile doğrular, `disabled` değilse
-   HMAC-imzalı token `{username, exp}` → `HttpOnly` cookie (30 gün, her `GET /api/session`'da yenilenir).
-3. Cookie yoksa/expired → arayüz `/login`'e yönlendirir.
-4. Şifre saklama: `scrypt(password, salt, 64)` + salt; sadece `password_hash` alanında.
-5. Bir kullanıcıyı iptal: `users.disabled = true` (admin arayüz veya Supabase paneli).
-6. Şifre sıfırlama: admin yeni şifre atar (self-service yok — basit tutuyoruz).
+2. Sunucu `supabase.rpc('app_login', {p_username, p_password})` çağırır. Parola doğrulama
+   **Postgres içinde** yapılır (bcrypt / `pgcrypto`) — API katmanında crypto kütüphanesi yok.
+3. Geçerliyse HMAC-imzalı token `{username, is_admin, exp}` → `HttpOnly; Secure; SameSite=Lax`
+   cookie (30 gün, her `GET /api/session`'da yenilenir). İmza: `SESSION_SECRET` (Node built-in `crypto` HMAC).
+4. Cookie yoksa/expired → arayüz `/login`'e yönlendirir.
+5. Parola saklama: `crypt(pw, gen_salt('bf', 12))` → `users.password_hash` (bcrypt).
+6. Kullanıcı oluşturma: `app_create_user(username, pw, is_admin)` — ilk admin Supabase SQL
+   Editor'den, sonrakiler `/api/admin/users` (admin cookie) üzerinden.
+7. İptal: `app_set_user_disabled(username, true)`. Parola sıfırlama: admin `app_create_user` ile
+   aynı username'e yeni parola yazar (self-service yok — basit).
+
+> Şema + fonksiyonlar: `app/db/schema.sql`. Panel adımları: `SETUP.md`.
 
 ---
 
@@ -423,17 +431,22 @@ Adımlar:
 
 ## 12. Yapılacaklar (faz faz)
 
-### Faz 0 — Güvenlik (§10)
-- [ ] Sırları rotate et (HiveMQ, Supabase, WiFi)
-- [ ] `git filter-repo` ile `.env*` geçmişten temizle + force push
-- [ ] `.gitignore` düzelt, `.env.example` / `secrets.example.h`
-- [ ] `sutluce-ev-esp32` + kök dizin `git init` (secrets.h yapısıyla)
+### Faz 0 — Güvenlik (§10) ✅
+- [x] Git geçmişi tarandı — `.env*` hiç commit edilmemiş, sır sızıntısı YOK (filter-repo gereksiz)
+- [x] Monorepo: `app/` + `esp32/`, kök `.gitignore`
+- [x] `esp32`: `Config.h` → `secrets.h` (gitignore) + `secrets.example.h`
+- [x] `app/.env.example`
+- [x] commit + push (repo: `Akilli-Ev-Sutluce`)
+- [x] **[sen]** Vercel Root Directory = `app`
+- [ ] HiveMQ zayıf şifre (`batoddy123`) → Faz 1'de yeni kullanıcılarla değişecek
 
 ### Faz 1 — Sözleşmeler
-- [ ] MQTT + payload şemasını dondur (bu doküman)
-- [ ] Supabase SQL migration + RLS uygula (`users`, `usage` dahil)
-- [ ] HiveMQ kullanıcıları / ACL kur
-- [ ] `scripts/adduser.mjs` + ilk admin kullanıcı
+- [x] MQTT + payload şemasını dondur (bu doküman)
+- [x] `app/db/schema.sql` hazır (tablolar + RLS + fonksiyonlar + seed)
+- [ ] **[sen]** Supabase SQL Editor'de `schema.sql` çalıştır
+- [ ] **[sen]** `select app_create_user('<kul>','<parola>', true);` — ilk admin
+- [ ] **[sen]** HiveMQ 5 kullanıcı + ACL (bkz. `SETUP.md`)
+- [ ] **[sen]** Değerleri `SETUP.md` env tablosuna not et
 
 ### Faz 2 — Firmware çekirdeği
 - [ ] PlatformIO 3 env + `ROLE_*`
@@ -449,7 +462,7 @@ Adımlar:
 - [ ] `salon`: IR klima aç/kapa
 
 ### Faz 4 — Backend (Vercel)
-- [ ] `/api/session` (kul.adı+şifre, cookie) + `/api/admin/users`
+- [ ] `/api/session` (rpc app_login + HMAC cookie) + `/api/admin/users` (rpc app_create_user)
 - [ ] `/api/command` (cookie auth, sunucudan publish)
 - [ ] `/api/ingest`
 - [ ] `/api/history` (+ usage_today/month)
