@@ -24,7 +24,7 @@ void NetworkManager::begin() {
 
     m_tls.setInsecure();                       // sertifika doğrulaması yok (hobi)
     m_mqtt.setServer(m_host, m_port);
-    m_mqtt.setKeepAlive(30);
+    m_mqtt.setKeepAlive(20);                   // broker ~30 sn'de offline algılar (LWT)
     m_mqtt.setSocketTimeout(10);
     m_mqtt.setBufferSize(1024);
     m_mqtt.setCallback([this](char* t, byte* p, unsigned int l) { onRawMessage(t, p, l); });

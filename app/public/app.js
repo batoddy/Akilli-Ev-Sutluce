@@ -13,9 +13,9 @@ const S = {
   filter: 'all',
   page: 'dashboard',
   dev: {
-    kapi:   { status: null, state: {}, telemetry: {} },
-    kamera: { status: null, state: {}, telemetry: {} },
-    salon:  { status: null, state: {}, telemetry: {} },
+    kapi:   { status: null, state: {}, telemetry: {}, lastMsg: 0 },
+    kamera: { status: null, state: {}, telemetry: {}, lastMsg: 0 },
+    salon:  { status: null, state: {}, telemetry: {}, lastMsg: 0 },
   },
   usage: { today: 0, month: 0 },
   stream: { active: false, bytes: 0, keepalive: null, usageT: null, urls: [] },
@@ -107,7 +107,7 @@ function connectMqtt(creds) {
   S.mqtt = c;
   renderConn('...');
   c.on('connect', () => {
-    S.connected = true; renderConn();
+    S.connected = true; S.mqttConnectedAt = Date.now(); renderConn();
     addLog('sys', 'INFO', 'MQTT bağlandı');
     ['state', 'status', 'event', 'telemetry', 'log', 'cmd/ack'].forEach((k) => c.subscribe(`ev/+/${k}`));
     if (S.stream.active) c.subscribe('ev/kamera/stream');
@@ -116,15 +116,21 @@ function connectMqtt(creds) {
   c.on('close', () => { S.connected = false; renderConn(); });
   c.on('error', (e) => { console.error('mqtt', e); renderConn('err'); });
   c.on('message', onMqtt);
+
+  // canlılık kontrolü: 75 sn sinyal gelmezse cihaz çevrimdışı sayılır
+  if (!S._staleTimer) S._staleTimer = setInterval(() => DEVICES.forEach(renderDevice), 20000);
 }
 
-function onMqtt(topic, payload) {
+function onMqtt(topic, payload, packet) {
   const p = topic.split('/');        // ev / <dev> / <kind...>
   const dev = p[1], kind = p.slice(2).join('/');
   if (kind === 'stream') { renderFrame(payload); return; }
 
+  // retained mesaj = geçmiş; sadece canlı mesaj "hâlâ ayakta" sinyalidir
+  if (S.dev[dev] && !(packet && packet.retain)) S.dev[dev].lastMsg = Date.now();
+
   const text = payload.toString();
-  if (kind === 'status') { S.dev[dev] && (S.dev[dev].status = text); renderDevice(dev); return; }
+  if (kind === 'status') { S.dev[dev] && (S.dev[dev].status = text.trim()); renderDevice(dev); return; }
 
   let m; try { m = JSON.parse(text); } catch { return; }
   if (!S.dev[dev]) return;
@@ -186,7 +192,14 @@ function renderConn(mode) {
 
 function renderDevice(dev) {
   const st = S.dev[dev];
-  const online = st.status ? st.status === 'online' : !!st.state.online;
+  const ref = st.lastMsg || S.mqttConnectedAt || 0;
+  const stale = ref && Date.now() - ref > 75000;   // 75 sn canlı sinyal yok
+  let online;
+  if (st.status === 'offline') online = false;      // LWT: broker ESP'nin gittiğini gördü
+  else if (stale) online = false;                   // sinyal kesildi
+  else if (st.status === 'online') online = true;
+  else online = !!st.state.online;                  // ilk saniyeler, henüz status yok
+  st._online = online;
   $$(`[data-badge="${dev}"]`).forEach((b) => { b.textContent = online ? 'çevrimiçi' : 'çevrimdışı'; b.className = 'badge ' + (online ? 'online' : 'offline'); });
   const dot = $(`[data-dot="${dev}"]`); if (dot) dot.className = 'dot ' + (online ? 'online' : 'offline');
   ({ kapi: renderKapi, kamera: renderKamera, salon: renderSalon }[dev] || (() => {}))();
