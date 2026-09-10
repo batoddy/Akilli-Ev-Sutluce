@@ -30,6 +30,10 @@ namespace Cfg {
     constexpr bool     RELAY_ACTIVE_LOW = true;
     constexpr uint32_t DOOR_PULSE_MS    = 2000;
 
+    // Durum LED'i (DevKit üstü mavi LED = GPIO2, aktif-HIGH)
+    constexpr uint8_t  STATUS_LED_PIN       = 2;
+    constexpr bool     STATUS_LED_ACTIVE_LOW = false;
+
 #elif defined(ROLE_KAMERA)
     // ESP32-CAM (AI-Thinker). Kamera+PSRAM pinleri sabit; bunlar boşta kalanlar.
     constexpr uint8_t  PIR_PIN          = 13;   // dijital giriş
@@ -38,11 +42,18 @@ namespace Cfg {
     constexpr uint32_t STREAM_IDLE_TIMEOUT_MS = 180000;  // hareketsizlikte dur
     constexpr uint32_t MOTION_DEBOUNCE_MS     = 8000;    // arka arkaya motion event bastırma
 
+    // ESP32-CAM üstü kırmızı LED = GPIO33, aktif-LOW
+    constexpr uint8_t  STATUS_LED_PIN       = 33;
+    constexpr bool     STATUS_LED_ACTIVE_LOW = true;
+
 #elif defined(ROLE_SALON)
     // IR verici LED (transistör üzerinden). DHT opsiyonel.
     constexpr uint8_t IR_PIN   = 4;
     constexpr uint8_t DHT_PIN  = 15;   // opsiyonel; 0 = yok
     constexpr bool    HAS_DHT  = false;
+
+    constexpr uint8_t  STATUS_LED_PIN       = 2;
+    constexpr bool     STATUS_LED_ACTIVE_LOW = false;
 
     // Klima IR protokolü — kendi klimana göre değiştir (COOLIX çoğu markasız
     // split klima ile çalışır). Liste: IRremoteESP8266 decode_type_t.

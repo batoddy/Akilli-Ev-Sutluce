@@ -10,6 +10,7 @@
 #include "core/CommandRouter.h"
 #include "core/Telemetry.h"
 #include "core/IngestClient.h"
+#include "core/StatusLed.h"
 
 #if defined(ROLE_KAPI)
   #include "roles/DoorRelay.h"
@@ -20,6 +21,7 @@
 #endif
 
 Logger         logger;
+StatusLed      led;
 NetworkManager net(logger, Cfg::WIFI_SSID, Cfg::WIFI_PASS,
                    Cfg::MQTT_HOST, Cfg::MQTT_PORT, Cfg::MQTT_USER, Cfg::MQTT_PASS,
                    DEVICE_ID);
@@ -42,15 +44,18 @@ void setup() {
     logger.begin(TOPIC_LOG, LogLevel::DEBUG, LogLevel::INFO);
     logger.info("=== %s [%s] fw %s ===", DEVICE_NAME, DEVICE_ID, FW_VERSION);
 
+    led.begin(Cfg::STATUS_LED_PIN, Cfg::STATUS_LED_ACTIVE_LOW);
+
     net.onMessage([](const String& t, const String& p) { router.handle(t, p); });
 
     net.onConnected([]() {
         role.onConnected();
     });
 
-    // ACK'i MQTT'nin yanı sıra /api/ingest'e de yaz (kalıcı kayıt)
+    // ACK'i MQTT'nin yanı sıra /api/ingest'e de yaz (kalıcı kayıt) + LED flaşı
     router.setAckSink([](const String& id, const String& cmd, bool ok,
                          const String& detail, uint32_t ts) {
+        led.blip(2500);   // komut geldi -> LED hızlı yanıp söner
         String d = "{\"id\":\"";      d += id;
         d += "\",\"cmd\":\"";         d += cmd;
         d += "\",\"result\":\"";      d += (ok ? "ok" : "error");
@@ -73,4 +78,8 @@ void loop() {
     role.loop();
     telemetry.loop();
     logger.tick();
+
+    // LED: WiFi yok=sönük, MQTT bağlanıyor=yavaş blink, bağlı=sürekli yanık
+    led.base(!net.wifiUp() ? 0 : !net.connected() ? 1 : 2);
+    led.loop();
 }
