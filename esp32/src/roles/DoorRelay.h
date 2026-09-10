@@ -27,6 +27,7 @@ private:
     CommandRouter&  m_router;
     Actuator        m_relay;
 
-    uint32_t m_pulseUntil = 0;
-    uint32_t m_lastOpenTs = 0;
+    bool     m_openPending = false;
+    uint32_t m_pulseUntil  = 0;
+    uint32_t m_lastOpenTs  = 0;
 };

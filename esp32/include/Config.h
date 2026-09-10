@@ -28,7 +28,7 @@ namespace Cfg {
     // Kapı-açma rölesi. Aktif-low röle modülleri yaygın -> ACTIVE_LOW=true dene.
     constexpr uint8_t  RELAY_PIN        = 26;
     constexpr bool     RELAY_ACTIVE_LOW = true;
-    constexpr uint32_t DOOR_PULSE_MS    = 2000;
+    constexpr uint32_t DOOR_PULSE_MS    = 1500;   // röle bu süre AÇIK kalır
 
     // Durum LED'i (DevKit üstü mavi LED = GPIO2, aktif-HIGH)
     constexpr uint8_t  STATUS_LED_PIN       = 2;

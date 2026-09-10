@@ -55,7 +55,7 @@ void setup() {
     // ACK'i MQTT'nin yanı sıra /api/ingest'e de yaz (kalıcı kayıt) + LED flaşı
     router.setAckSink([](const String& id, const String& cmd, bool ok,
                          const String& detail, uint32_t ts) {
-        led.blip(2500);   // komut geldi -> LED hızlı yanıp söner
+        led.blip(1500);   // komut geldi -> LED 1.5 sn hızlı yanıp söner
         String d = "{\"id\":\"";      d += id;
         d += "\",\"cmd\":\"";         d += cmd;
         d += "\",\"result\":\"";      d += (ok ? "ok" : "error");
@@ -65,6 +65,7 @@ void setup() {
     });
 
     net.begin();
+    ingest.begin();   // arka plan ingest görevi
     logger.attachPublisher([](const char* topic, const char* payload) {
         return net.publish(topic, payload, false);
     });
